@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: via-libre-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: via_libre
+      POSTGRES_USER: via_libre
+      POSTGRES_PASSWORD: secret_dev
+    ports:
+      - '5432:5432'
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U via_libre']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: via-libre-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: via-libre-mailpit
+    restart: unless-stopped
+    ports:
+      - '8025:8025' # Web UI
+      - '1025:1025' # SMTP
+
+volumes:
+  pg_data:
