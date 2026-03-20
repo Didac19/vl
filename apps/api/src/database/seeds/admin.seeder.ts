@@ -1,6 +1,7 @@
 import { Seeder, SeederFactoryManager } from 'typeorm-extension';
 import { DataSource } from 'typeorm';
 import { User } from '@/modules/users/entities/user.entity';
+import { Wallet } from '@/modules/wallet/entities/wallet.entity';
 import { UserRole } from '@via-libre/shared-types';
 import * as bcrypt from 'bcryptjs';
 
@@ -18,6 +19,7 @@ export default class AdminSeeder implements Seeder {
     
     if (!existingAdmin) {
       const hashedPassword = await bcrypt.hash(password, 10);
+      
       const admin = repository.create({
         fullName: 'Vía Libre Admin',
         email,
@@ -25,6 +27,13 @@ export default class AdminSeeder implements Seeder {
         phone: '3000000000',
         role: UserRole.ADMIN,
       });
+
+      // Every user must have a wallet
+      const wallet = new Wallet();
+      wallet.balance = 0;
+      wallet.currency = 'COP';
+      admin.wallet = wallet;
+
       await repository.save(admin);
       console.log('✅ Admin user seeded.');
     } else {

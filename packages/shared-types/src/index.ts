@@ -56,7 +56,8 @@ export interface TopUpWalletDto {
 }
 
 // ─── Transport ─────────────────────────────────────────────────────────────
-export type TransportType = 'TRANSMILENIO' | 'SITP' | 'COOPERATIVA' | 'MICROBUS';
+export type TransportType = 'CABLE_AEREO' | 'BUS_URBANO' | 'BUSETA' | 'INTERMUNICIPAL' | 'TRANSMILENIO' | 'SITP' | 'COOPERATIVA' | 'MICROBUS';
+export type PricingStrategy = 'FLAT' | 'POINT_TO_POINT';
 
 export interface RouteSearchDto {
   originLat: number;
@@ -65,12 +66,20 @@ export interface RouteSearchDto {
   destinationLng: number;
 }
 
-export interface RouteOptionDto {
+export interface TransportTypeDto {
   id: string;
-  transportType: TransportType;
   name: string;
-  estimatedMinutes: number;
-  fareAmount: number; // COP cents
+  type: TransportType;
+  fareAmount: number; // Default/Base fare
+  requiresRouteSelection: boolean;
+  routes: RouteDto[];
+}
+
+export interface RouteDto {
+  id: string;
+  name: string;
+  pricingStrategy: PricingStrategy;
+  baseFare: number;
   stops: StopDto[];
 }
 
@@ -79,6 +88,55 @@ export interface StopDto {
   name: string;
   lat: number;
   lng: number;
+  order: number;
+}
+
+export interface PointToPointFareDto {
+  id: string;
+  routeId: string;
+  originStopId: string;
+  destinationStopId: string;
+  fareAmount: number;
+}
+
+// ─── Admin DTOs ────────────────────────────────────────────────────────────
+export interface CreateTransportTypeDto {
+  name: string;
+  type: TransportType;
+  fareAmount: number;
+  requiresRouteSelection: boolean;
+}
+
+export interface UpdateTransportTypeDto extends Partial<CreateTransportTypeDto> { }
+
+export interface CreateStopDto {
+  name: string;
+  lat: number;
+  lng: number;
+  order: number;
+}
+
+export interface CreatePointToPointFareDto {
+  originStopIndex: number; // reference by index in the stops array for new routes
+  destinationStopIndex: number;
+  fareAmount: number;
+}
+
+export interface CreateRouteDto {
+  transportTypeId: string;
+  name: string;
+  pricingStrategy: PricingStrategy;
+  baseFare: number;
+  stops?: CreateStopDto[];
+  fares?: CreatePointToPointFareDto[];
+}
+
+export interface UpdateRouteDto {
+  name?: string;
+  pricingStrategy?: PricingStrategy;
+  baseFare?: number;
+  stops?: (CreateStopDto & { id?: string })[];
+  fares?: (CreatePointToPointFareDto & { id?: string; originStopId?: string; destinationStopId?: string })[];
 }
 
 // ─── Ticketing ─────────────────────────────────────────────────────────────

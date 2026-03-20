@@ -14,7 +14,7 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepo: Repository<User>,
-  ) {}
+  ) { }
 
   async create(data: {
     fullName: string;
@@ -60,5 +60,15 @@ export class UsersService {
     await this.findById(id);
     await this.usersRepo.update(id, { role });
     return this.findById(id);
+  }
+
+  async updatePassword(id: string, newPassword: string): Promise<void> {
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    await this.usersRepo.update(id, { password: hashedPassword });
+  }
+
+  async delete(id: string): Promise<void> {
+    const user = await this.findById(id);
+    await this.usersRepo.remove(user);
   }
 }

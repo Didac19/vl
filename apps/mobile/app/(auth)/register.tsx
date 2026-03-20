@@ -1,11 +1,14 @@
 import React from 'react';
-import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { theme } from '../../constants/theme';
+import { StatusBar } from 'expo-status-bar';
 
 export default function RegisterScreen() {
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar style="dark" />
       <View style={styles.content}>
         <Text style={styles.title}>Crear Cuenta</Text>
         <Text style={styles.subtitle}>Próximamente disponible</Text>

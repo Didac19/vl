@@ -1,22 +1,23 @@
 import React, { useState } from 'react';
-import { 
-  StyleSheet, 
-  Text, 
-  View, 
-  TextInput, 
-  TouchableOpacity, 
-  SafeAreaView, 
-  KeyboardAvoidingView, 
-  Platform, 
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  KeyboardAvoidingView,
+  Platform,
   Alert,
   Dimensions,
   Image
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Mail, Lock, Chrome, Apple, ArrowRight } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
+import { StatusBar } from 'expo-status-bar';
 
 const { width, height } = Dimensions.get('window');
 
@@ -39,7 +40,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const setAuth = useAuthStore((state: any) => state.setAuth);
+  const { setAuth, fetchProfile } = useAuthStore();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -51,7 +52,13 @@ export default function LoginScreen() {
     try {
       const response = await api.post('/auth/login', { email, password });
       const { user, accessToken, refreshToken } = response.data;
+
+      // First save the initial auth data (tokens and initial user info)
       await setAuth(user, accessToken, refreshToken);
+
+      // Then fetch the full profile from /users/me to ensure complete data
+      await fetchProfile();
+
       router.replace('/(tabs)');
     } catch (error: any) {
       console.error(error);
@@ -64,6 +71,7 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
+      <StatusBar style="dark" />
       {/* Background Mesh Gradients */}
       <View style={styles.meshContainer}>
         <LinearGradient
@@ -140,7 +148,7 @@ export default function LoginScreen() {
                 </View>
 
                 {/* Submit Button */}
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[styles.submitButton, loading && styles.buttonDisabled]}
                   onPress={handleLogin}
                   disabled={loading}

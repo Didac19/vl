@@ -23,7 +23,8 @@ export class AuthService {
     const user = await this.usersService.create(data);
     // Automatically create a wallet for the new user
     await this.walletService.createForUser(user.id);
-    return this.generateTokens(user.id, user.email, user.role);
+    const tokens = this.generateTokens(user.id, user.email, user.role);
+    return { ...tokens, user };
   }
 
   async login(email: string, password: string) {
@@ -36,7 +37,10 @@ export class AuthService {
 
     if (!user.isActive) throw new UnauthorizedException('Cuenta desactivada');
 
-    return this.generateTokens(user.id, user.email, user.role);
+    const tokens = this.generateTokens(user.id, user.email, user.role);
+    // Remove password before returning user
+    delete (user as any).password;
+    return { ...tokens, user };
   }
 
   async refreshToken(userId: string) {

@@ -1,13 +1,43 @@
 import React from 'react';
-import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, Switch, ScrollView } from 'react-native';
-import { User, Bell, Shield, CreditCard, LogOut, ChevronRight, Settings, HelpCircle, Map } from 'lucide-react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Switch, ScrollView, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { User, Bell, Shield, CreditCard, LogOut, ChevronRight, Settings, HelpCircle, Map, LayoutGrid } from 'lucide-react-native';
 import { theme } from '../../constants/theme';
+import { useAuthStore } from '../../store/auth';
+import { router } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 
 export default function ProfileScreen() {
   const [isPushEnabled, setIsPushEnabled] = React.useState(true);
+  const { user, logout } = useAuthStore();
+  const isAdmin = user?.role === 'ADMIN';
+
+  const handleLogout = async () => {
+    Alert.alert(
+      "Cerrar Sesión",
+      "¿Estás seguro de que quieres salir?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Salir",
+          style: "destructive",
+          onPress: async () => {
+            await logout();
+            router.replace('/(auth)/login');
+          }
+        }
+      ]
+    );
+  };
+
+  const getInitials = (name: string) => {
+    if (!name) return 'U';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.header}>
           <Text style={styles.title}>Mi Perfil</Text>
@@ -16,25 +46,49 @@ export default function ProfileScreen() {
         {/* Info de Usuario */}
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>JC</Text>
+            <Text style={styles.avatarText}>{getInitials(user?.fullName || 'Usuario')}</Text>
           </View>
           <View style={styles.userInfo}>
-            <Text style={styles.userName}>Juan Carlos</Text>
-            <Text style={styles.userEmail}>j.carlos@email.com</Text>
+            <Text style={styles.userName}>{user?.fullName || 'Usuario'}</Text>
+            <Text style={styles.userEmail}>{user?.email || 'email@ejemplo.com'}</Text>
             <View style={styles.levelBadge}>
               <Text style={styles.levelText}>Viajero Esmeralda</Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.editBtn}>
+          <TouchableOpacity style={styles.editBtn} onPress={() => router.push('/edit-profile')}>
             <Settings size={20} color={theme.colors.neutral[500]} />
           </TouchableOpacity>
         </View>
 
+        {isAdmin && (
+          <>
+            <Text style={styles.sectionTitle}>Panel de Administración</Text>
+            <View style={styles.menu}>
+              <MenuRow
+                icon={<LayoutGrid size={20} color={theme.colors.primary.esmeralda} />}
+                label="Gestionar Transporte"
+                onPress={() => router.push('/admin/transport-types')}
+              />
+            </View>
+          </>
+        )}
+
         <Text style={styles.sectionTitle}>Cuenta y Seguridad</Text>
         <View style={styles.menu}>
-          <MenuRow icon={<User size={20} color={theme.colors.neutral[600]} />} label="Información Personal" />
-          <MenuRow icon={<CreditCard size={20} color={theme.colors.neutral[600]} />} label="Métodos de Pago" />
-          <MenuRow icon={<Shield size={20} color={theme.colors.neutral[600]} />} label="Cambiar Contraseña" />
+          <MenuRow
+            icon={<User size={20} color={theme.colors.neutral[600]} />}
+            label="Información Personal"
+            onPress={() => router.push('/edit-profile')}
+          />
+          <MenuRow
+            icon={<CreditCard size={20} color={theme.colors.neutral[600]} />}
+            label="Métodos de Pago"
+          />
+          <MenuRow
+            icon={<Shield size={20} color={theme.colors.neutral[600]} />}
+            label="Cambiar Contraseña"
+            onPress={() => router.push('/change-password')}
+          />
         </View>
 
         <Text style={styles.sectionTitle}>Notificaciones</Text>
@@ -59,7 +113,7 @@ export default function ProfileScreen() {
           <MenuRow icon={<HelpCircle size={20} color={theme.colors.neutral[600]} />} label="Ayuda y Soporte" />
         </View>
 
-        <TouchableOpacity style={styles.logoutBtn}>
+        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
           <LogOut size={20} color={theme.colors.semantic.error} />
           <Text style={styles.logoutText}>Cerrar Sesión</Text>
         </TouchableOpacity>
@@ -70,9 +124,9 @@ export default function ProfileScreen() {
   );
 }
 
-function MenuRow({ icon, label }: { icon: any, label: string }) {
+function MenuRow({ icon, label, onPress }: { icon: any, label: string, onPress?: () => void }) {
   return (
-    <TouchableOpacity style={styles.menuRow}>
+    <TouchableOpacity style={styles.menuRow} onPress={onPress}>
       <View style={styles.menuLeft}>
         <View style={styles.iconBox}>{icon}</View>
         <Text style={styles.menuLabel}>{label}</Text>

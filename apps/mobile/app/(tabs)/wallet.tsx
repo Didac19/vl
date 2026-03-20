@@ -1,13 +1,35 @@
 import React from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, SafeAreaView, FlatList } from 'react-native';
-import { QrCode, Clock, CheckCircle2, AlertCircle, ArrowUpRight, ArrowDownLeft, ChevronRight } from 'lucide-react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { QrCode, Clock, CheckCircle2, AlertCircle, ArrowUpRight, ArrowDownLeft, ChevronRight, Plus } from 'lucide-react-native';
 import { theme } from '../../constants/theme';
+import { useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 
 export default function WalletScreen() {
+  const router = useRouter();
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar style="dark" />
       <View style={styles.header}>
-        <Text style={styles.title}>Billetera Digital</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={styles.title}>Mis Pasajes</Text>
+          <TouchableOpacity
+            onPress={() => router.push('/select-transport')}
+            style={{
+              backgroundColor: theme.colors.primary.esmeralda,
+              paddingHorizontal: 16,
+              paddingVertical: 8,
+              borderRadius: 12,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 8
+            }}
+          >
+            <Plus size={18} color="white" />
+            <Text style={{ color: 'white', fontWeight: '700', fontSize: 14 }}>Nuevo</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <FlatList
