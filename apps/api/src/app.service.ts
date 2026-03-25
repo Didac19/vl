@@ -5,8 +5,8 @@ export class AppService {
   healthCheck() {
     return {
       status: 'ok',
-      service: 'via-libre-api',
-      version: '0.1.0',
+      service: 'transix-api',
+      version: '0.1.1',
       timestamp: new Date().toISOString(),
     };
   }

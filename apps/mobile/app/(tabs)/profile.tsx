@@ -120,7 +120,7 @@ export default function ProfileScreen() {
           <Text style={styles.logoutText}>Cerrar Sesión</Text>
         </TouchableOpacity>
 
-        <Text style={styles.version}>Vía Libre v1.0.0 (Beta)</Text>
+        <Text style={styles.version}>TranSix v1.0.0 (Beta)</Text>
       </ScrollView>
     </SafeAreaView>
   );

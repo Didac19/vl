@@ -1,4 +1,4 @@
-// Vía Libre — Design System Tokens
+// TranSix — Design System Tokens
 // Basado en biodiversidad y geografía colombiana
 
 export const colors = {

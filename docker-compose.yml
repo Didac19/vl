@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: via-libre-postgres
+    container_name: transix-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: via_libre
@@ -19,7 +19,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: via-libre-redis
+    container_name: transix-redis
     restart: unless-stopped
     ports:
       - '6379:6379'
@@ -31,7 +31,7 @@ services:
 
   mailpit:
     image: axllent/mailpit:latest
-    container_name: via-libre-mailpit
+    container_name: transix-mailpit
     restart: unless-stopped
     ports:
       - '8025:8025' # Web UI

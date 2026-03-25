@@ -93,7 +93,7 @@ export default function LoginScreen() {
           <View style={styles.content}>
             {/* Header / Brand */}
             <View style={styles.header}>
-              <Text style={styles.brandTitle}>Vía Libre</Text>
+              <Text style={styles.brandTitle}>TranSix</Text>
               <Text style={styles.brandSubtitle}>TU MOVILIDAD, TU CIUDAD</Text>
             </View>
 
@@ -124,7 +124,7 @@ export default function LoginScreen() {
                 {/* Password Field */}
                 <View style={styles.inputGroup}>
                   <View style={styles.labelRow}>
-                    <Text style={styles.label}>Contraseña</Text>
+                    <Text style={styles.label}>TranSix v1.0.0 (Beta)</Text>
                     <TouchableOpacity>
                       <Text style={styles.forgotPassword}>¿Olvidaste tu contraseña?</Text>
                     </TouchableOpacity>

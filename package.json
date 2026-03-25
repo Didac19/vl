@@ -1,8 +1,8 @@
 {
-  "name": "via-libre",
+  "name": "transix",
   "private": true,
-  "version": "0.1.0",
-  "description": "Vía Libre — Plataforma de Movilidad Colombiana",
+  "version": "0.1.1",
+  "description": "TranSix — Plataforma de Movilidad Colombiana",
   "scripts": {
     "dev:api": "pnpm --filter @via-libre/api dev",
     "dev:mobile": "pnpm --filter @via-libre/mobile start",

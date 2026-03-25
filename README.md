@@ -1,4 +1,4 @@
-# 🟢 Vía Libre — Plataforma de Movilidad Colombiana
+# 🟢 TranSix — Plataforma de Movilidad Colombiana
 
 Sistema centralizado de transporte urbano e intermunicipal para Colombia (TransMilenio, SITP, Cooperativas y Microbuses).
 
@@ -7,7 +7,7 @@ Sistema centralizado de transporte urbano e intermunicipal para Colombia (TransM
 - **Backend:** NestJS (Monolito Modular), PostgreSQL, Redis.
 - **Frontend:** React Native Expo (Expo Router v3).
 - **Monorepo:** pnpm workspaces.
-- **Diseño:** Identidad Visual "Vía Libre" (Esmeraldas y Terracotas).
+- **Diseño:** Identidad Visual "TranSix" (Esmeraldas y Terracotas).
 
 ---
 
@@ -62,4 +62,4 @@ npm run dev:mobile
 1. **JWS Offline Ticketing:** Los pasajes QR se firman digitalmente permitiendo validación en estaciones sin conexión a internet.
 2. **Modular Monolith:** Arquitectura escalable lista para convertirse en microservicios si es necesario.
 3. **Identidad Local:** UI diseñada pensando en el contexto colombiano, con tipografía Plus Jakarta Sans y paleta de colores Esmeralda/Terracota.
-# vl
+# transix

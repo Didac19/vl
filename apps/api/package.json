@@ -1,8 +1,8 @@
 {
   "name": "@via-libre/api",
   "version": "0.1.0",
-  "description": "Vía Libre — NestJS Monolito Modular API",
-  "author": "Vía Libre Team",
+  "description": "Transix API",
+  "author": "Transix Team",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {

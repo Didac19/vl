@@ -37,7 +37,7 @@ export class SeedService implements OnModuleInit {
     this.logger.log('Creating admin user...');
 
     await this.usersService.create({
-      fullName: 'Vía Libre Admin',
+      fullName: 'TranSix Admin',
       email: adminEmail,
       password: adminPass,
       phone: '3000000000',

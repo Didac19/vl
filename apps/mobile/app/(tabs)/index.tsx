@@ -45,7 +45,7 @@ export default function DashboardScreen() {
       {/* TopAppBar */}
       <View style={styles.topBar}>
         <View style={styles.topBarLeft}>
-          <Text style={styles.logoText}>Vía Libre</Text>
+          <Text style={styles.logoText}>TranSix</Text>
         </View>
         <TouchableOpacity style={styles.avatarBorder}>
           <Image
@@ -735,7 +735,7 @@ const styles = StyleSheet.create({
   typeBadgeContainer: {
     paddingHorizontal: 12,
     paddingVertical: 4,
-    backgroundColor: colors.surfaceContainerHigh,
+    backgroundColor: colors.surfaceContainerHighest,
     borderRadius: 99,
   },
   typeBadgeTextLarge: {

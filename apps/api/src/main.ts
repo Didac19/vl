@@ -36,9 +36,9 @@ async function bootstrap() {
 
   // Swagger
   const config = new DocumentBuilder()
-    .setTitle('Vía Libre API')
+    .setTitle('TranSix API')
     .setDescription(
-      'API REST para la plataforma de movilidad colombiana Vía Libre',
+      'API REST para la plataforma de movilidad colombiana TranSix',
     )
     .setVersion('1.0')
     .addBearerAuth(
@@ -54,14 +54,14 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document, {
-    customSiteTitle: 'Vía Libre API Docs',
+    customSiteTitle: 'TranSix API Docs',
     swaggerOptions: { persistAuthorization: true },
   });
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
 
-  logger.log(`🟢 Vía Libre API corriendo en: http://localhost:${port}`);
+  logger.log(`🟢 TranSix API corriendo en: http://localhost:${port}`);
   logger.log(`📚 Swagger docs: http://localhost:${port}/api/docs`);
 }
 

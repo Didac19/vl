@@ -21,7 +21,7 @@ export default class UserSeeder implements Seeder {
       console.log('🌱 Creating admin user...');
       const hashedPassword = await bcrypt.hash('admin123', 10);
       admin = userRepo.create({
-        fullName: 'Admin Vía Libre',
+        fullName: 'Admin TranSix',
         email: adminEmail,
         password: hashedPassword,
         phone: '3000000000',

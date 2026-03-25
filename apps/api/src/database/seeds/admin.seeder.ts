@@ -21,7 +21,7 @@ export default class AdminSeeder implements Seeder {
       const hashedPassword = await bcrypt.hash(password, 10);
       
       const admin = repository.create({
-        fullName: 'Vía Libre Admin',
+        fullName: 'TranSix Admin',
         email,
         password: hashedPassword,
         phone: '3000000000',
