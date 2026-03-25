@@ -34,7 +34,10 @@ export class UsersService {
   }
 
   async findById(id: string): Promise<User> {
-    const user = await this.usersRepo.findOne({ where: { id } });
+    const user = await this.usersRepo.findOne({
+      where: { id },
+      relations: ['company'],
+    });
     if (!user) throw new NotFoundException('Usuario no encontrado');
     return user;
   }
@@ -42,6 +45,7 @@ export class UsersService {
   async findByEmail(email: string, withPassword = false): Promise<User | null> {
     const qb = this.usersRepo
       .createQueryBuilder('user')
+      .leftJoinAndSelect('user.company', 'company')
       .where('user.email = :email', { email });
     if (withPassword) qb.addSelect('user.password');
     return qb.getOne();

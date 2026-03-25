@@ -12,7 +12,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly walletService: WalletService,
-  ) {}
+  ) { }
 
   async register(data: {
     fullName: string;
@@ -23,8 +23,14 @@ export class AuthService {
     const user = await this.usersService.create(data);
     // Automatically create a wallet for the new user
     await this.walletService.createForUser(user.id);
-    const tokens = this.generateTokens(user.id, user.email, user.role);
-    return { ...tokens, user };
+    const tokens = this.generateTokens(user.id, user.email, user.role, user.company?.id);
+    return {
+      ...tokens,
+      user: {
+        ...user,
+        companyId: user.company?.id
+      }
+    };
   }
 
   async login(email: string, password: string) {
@@ -37,19 +43,25 @@ export class AuthService {
 
     if (!user.isActive) throw new UnauthorizedException('Cuenta desactivada');
 
-    const tokens = this.generateTokens(user.id, user.email, user.role);
+    const tokens = this.generateTokens(user.id, user.email, user.role, user.company?.id);
     // Remove password before returning user
-    delete (user as any).password;
-    return { ...tokens, user };
+    const { password: _, ...userWithoutPassword } = user;
+    return {
+      ...tokens,
+      user: {
+        ...userWithoutPassword,
+        companyId: user.company?.id
+      }
+    };
   }
 
   async refreshToken(userId: string) {
     const user = await this.usersService.findById(userId);
-    return this.generateTokens(user.id, user.email, user.role);
+    return this.generateTokens(user.id, user.email, user.role, user.company?.id);
   }
 
-  private generateTokens(userId: string, email: string, role: string) {
-    const payload = { sub: userId, email, role };
+  private generateTokens(userId: string, email: string, role: string, companyId?: string) {
+    const payload = { sub: userId, email, role, companyId };
 
     const accessToken = this.jwtService.sign(payload);
     const refreshToken = this.jwtService.sign(payload, {

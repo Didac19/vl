@@ -11,6 +11,8 @@ export default function ProfileScreen() {
   const [isPushEnabled, setIsPushEnabled] = React.useState(true);
   const { user, logout } = useAuthStore();
   const isAdmin = user?.role === 'ADMIN';
+  const isCompanyAdmin = user?.role === 'COMPANY_ADMIN';
+  const hasAdminAccess = isAdmin || isCompanyAdmin;
 
   const handleLogout = async () => {
     Alert.alert(
@@ -52,7 +54,7 @@ export default function ProfileScreen() {
             <Text style={styles.userName}>{user?.fullName || 'Usuario'}</Text>
             <Text style={styles.userEmail}>{user?.email || 'email@ejemplo.com'}</Text>
             <View style={styles.levelBadge}>
-              <Text style={styles.levelText}>Viajero Esmeralda</Text>
+              <Text style={styles.levelText}>{user?.role === 'ADMIN' ? 'Super Administrador' : user?.role === 'COMPANY_ADMIN' ? 'Admin de Compañía' : 'Viajero Esmeralda'}</Text>
             </View>
           </View>
           <TouchableOpacity style={styles.editBtn} onPress={() => router.push('/edit-profile')}>
@@ -60,13 +62,13 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
-        {isAdmin && (
+        {hasAdminAccess && (
           <>
             <Text style={styles.sectionTitle}>Panel de Administración</Text>
             <View style={styles.menu}>
               <MenuRow
                 icon={<LayoutGrid size={20} color={theme.colors.primary.esmeralda} />}
-                label="Gestionar Transporte"
+                label={isAdmin ? "Gestionar Transporte (Global)" : "Gestionar Mis Rutas"}
                 onPress={() => router.push('/admin/transport-types')}
               />
             </View>

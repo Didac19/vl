@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Lock, Eye, EyeOff, Save } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { api } from '../lib/api';
+import { useChangePassword } from '../lib/queries';
 
 const colors = {
   background: "#fcf9f5",
@@ -26,7 +26,7 @@ export default function ChangePasswordScreen() {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   
-  const [loading, setLoading] = useState(false);
+  const changePassword = useChangePassword();
 
   const handleSave = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
@@ -44,9 +44,8 @@ export default function ChangePasswordScreen() {
       return;
     }
 
-    setLoading(true);
     try {
-      await api.patch('/users/me/password', { currentPassword, newPassword });
+      await changePassword.mutateAsync({ currentPassword, newPassword });
       Alert.alert('Éxito', 'Contraseña actualizada correctamente', [
         { text: 'OK', onPress: () => router.back() }
       ]);
@@ -54,8 +53,6 @@ export default function ChangePasswordScreen() {
       console.error(error);
       const message = error.response?.data?.message || 'No se pudo actualizar la contraseña';
       Alert.alert('Error', typeof message === 'string' ? message : 'Error de servidor');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -133,11 +130,11 @@ export default function ChangePasswordScreen() {
 
           {/* Save Button */}
           <TouchableOpacity 
-            style={[styles.saveButton, loading && styles.disabledButton]} 
+            style={[styles.saveButton, changePassword.isPending && styles.disabledButton]} 
             onPress={handleSave}
-            disabled={loading}
+            disabled={changePassword.isPending}
           >
-            {loading ? (
+            {changePassword.isPending ? (
               <ActivityIndicator color="white" />
             ) : (
               <>

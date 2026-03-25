@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Ticket, Bus, ArrowRight, Expand, Info, Train, MapPin } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { api } from '../lib/api';
+import { useRouteFares } from '../lib/queries';
 import { PointToPointFareDto } from '@via-libre/shared-types';
 
 const colors = {
@@ -34,30 +34,11 @@ const colors = {
 export default function PurchaseTicketScreen() {
   const router = useRouter();
   const { transportId, transportTitle, transportType, baseFare, originStopId, destinationStopId } = useLocalSearchParams();
-  const [calculatedFare, setCalculatedFare] = useState<number>(Number(baseFare) || 0);
-  const [loadingFare, setLoadingFare] = useState(false);
-
-  useEffect(() => {
-    if (originStopId && destinationStopId && transportId) {
-      fetchP2PFare();
-    }
-  }, [originStopId, destinationStopId, transportId]);
-
-  const fetchP2PFare = async () => {
-    setLoadingFare(true);
-    try {
-      const response = await api.get(`/transport/routes/${transportId}/fares`);
-      const fares: PointToPointFareDto[] = response.data;
-      const match = fares.find(f => f.originStopId === originStopId && f.destinationStopId === destinationStopId);
-      if (match) {
-        setCalculatedFare(match.fareAmount);
-      }
-    } catch (error) {
-      console.error('Error fetching P2P fare:', error);
-    } finally {
-      setLoadingFare(false);
-    }
-  };
+  
+  const { data: fares = [], isLoading: loadingFare } = useRouteFares((transportId as string) || '');
+  
+  const match = fares.find((f: any) => f.originStopId === originStopId && f.destinationStopId === destinationStopId);
+  const calculatedFare = match ? match.fareAmount : (Number(baseFare) || 0);
 
   const getTransportConfig = () => {
     const formattedFare = `$${calculatedFare.toLocaleString()}`;

@@ -33,8 +33,12 @@ export class UsersController {
 
   @Get('me')
   @ApiOperation({ summary: 'Obtener perfil del usuario autenticado' })
-  getMe(@Request() req: any) {
-    return this.usersService.findById(req.user.id);
+  async getMe(@Request() req: any) {
+    const user = await this.usersService.findById(req.user.id);
+    return {
+      ...user,
+      companyId: user.company?.id,
+    };
   }
 
   @Patch('me')

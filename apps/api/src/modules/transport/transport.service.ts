@@ -28,11 +28,13 @@ export class TransportService {
     private readonly dataSource: DataSource,
   ) { }
 
-  async findAllRoutes(): Promise<TransportTypeDto[]> {
-    const types = await this.transportTypeRepo.find({
-      relations: ['routes', 'routes.stops'],
+  async findAllRoutes(companyId?: string): Promise<TransportTypeDto[]> {
+    const query: any = {
+      relations: ['routes', 'routes.stops', 'routes.company'],
       order: { name: 'ASC' },
-    });
+    };
+
+    const types = await this.transportTypeRepo.find(query);
 
     return types.map((type) => ({
       id: type.id,
@@ -40,21 +42,23 @@ export class TransportService {
       type: type.type,
       fareAmount: Number(type.fareAmount),
       requiresRouteSelection: type.requiresRouteSelection,
-      routes: type.routes.map((route) => ({
-        id: route.id,
-        name: route.name,
-        pricingStrategy: route.pricingStrategy,
-        baseFare: Number(route.baseFare),
-        stops: route.stops
-          .sort((a, b) => a.order - b.order)
-          .map((stop) => ({
-            id: stop.id,
-            name: stop.name,
-            lat: Number(stop.lat),
-            lng: Number(stop.lng),
-            order: stop.order,
-          })),
-      })),
+      routes: type.routes
+        .filter((route) => !companyId || route.company?.id === companyId)
+        .map((route) => ({
+          id: route.id,
+          name: route.name,
+          pricingStrategy: route.pricingStrategy,
+          baseFare: Number(route.baseFare),
+          stops: route.stops
+            .sort((a, b) => a.order - b.order)
+            .map((stop) => ({
+              id: stop.id,
+              name: stop.name,
+              lat: Number(stop.lat),
+              lng: Number(stop.lng),
+              order: stop.order,
+            })),
+        })),
     }));
   }
 
@@ -79,7 +83,7 @@ export class TransportService {
     if (result.affected === 0) throw new NotFoundException('Transport type not found');
   }
 
-  async createRoute(dto: CreateRouteDto): Promise<Route> {
+  async createRoute(dto: CreateRouteDto, companyId?: string): Promise<Route> {
     const transportType = await this.transportTypeRepo.findOneBy({ id: dto.transportTypeId });
     if (!transportType) throw new NotFoundException('Transport type not found');
 
@@ -89,6 +93,7 @@ export class TransportService {
         pricingStrategy: dto.pricingStrategy,
         baseFare: dto.baseFare,
         transportType,
+        company: companyId ? { id: companyId } : undefined,
       });
       const savedRoute = await manager.save(Route, route);
 
@@ -116,12 +121,16 @@ export class TransportService {
     });
   }
 
-  async updateRoute(id: string, dto: UpdateRouteDto): Promise<Route> {
+  async updateRoute(id: string, dto: UpdateRouteDto, companyId?: string): Promise<Route> {
     const route = await this.routeRepo.findOne({
       where: { id },
-      relations: ['stops', 'fareTable'],
+      relations: ['stops', 'fareTable', 'company'],
     });
     if (!route) throw new NotFoundException('Route not found');
+
+    if (companyId && route.company?.id !== companyId) {
+      throw new BadRequestException('You do not have permission to modify this route');
+    }
 
     return this.dataSource.transaction(async (manager) => {
       if (dto.name) route.name = dto.name;
@@ -166,9 +175,18 @@ export class TransportService {
     });
   }
 
-  async deleteRoute(id: string): Promise<void> {
-    const result = await this.routeRepo.delete(id);
-    if (result.affected === 0) throw new NotFoundException('Route not found');
+  async deleteRoute(id: string, companyId?: string): Promise<void> {
+    const route = await this.routeRepo.findOne({
+      where: { id },
+      relations: ['company'],
+    });
+    if (!route) throw new NotFoundException('Route not found');
+
+    if (companyId && route.company?.id !== companyId) {
+      throw new BadRequestException('You do not have permission to delete this route');
+    }
+
+    await this.routeRepo.delete(id);
   }
 
   async getFaresForRoute(routeId: string): Promise<PointToPointFareDto[]> {

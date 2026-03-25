@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Mail, Lock, Chrome, Apple, ArrowRight } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { api } from '@/lib/api';
+import { useLogin } from '@/lib/queries';
 import { useAuthStore } from '@/store/auth';
 import { StatusBar } from 'expo-status-bar';
 
@@ -39,8 +39,8 @@ const COLORS = {
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const { setAuth, fetchProfile } = useAuthStore();
+  const loginMutation = useLogin();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -48,10 +48,9 @@ export default function LoginScreen() {
       return;
     }
 
-    setLoading(true);
     try {
-      const response = await api.post('/auth/login', { email, password });
-      const { user, accessToken, refreshToken } = response.data;
+      const data = await loginMutation.mutateAsync({ email, password });
+      const { user, accessToken, refreshToken } = data;
 
       // First save the initial auth data (tokens and initial user info)
       await setAuth(user, accessToken, refreshToken);
@@ -64,8 +63,6 @@ export default function LoginScreen() {
       console.error(error);
       const message = error.response?.data?.message || 'Error al iniciar sesión';
       Alert.alert('Error', typeof message === 'string' ? message : JSON.stringify(message));
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -149,12 +146,12 @@ export default function LoginScreen() {
 
                 {/* Submit Button */}
                 <TouchableOpacity
-                  style={[styles.submitButton, loading && styles.buttonDisabled]}
+                  style={[styles.submitButton, loginMutation.isPending && styles.buttonDisabled]}
                   onPress={handleLogin}
-                  disabled={loading}
+                  disabled={loginMutation.isPending}
                 >
                   <Text style={styles.submitButtonText}>
-                    {loading ? 'Cargando...' : 'Iniciar Sesión'}
+                    {loginMutation.isPending ? 'Cargando...' : 'Iniciar Sesión'}
                   </Text>
                 </TouchableOpacity>
               </View>

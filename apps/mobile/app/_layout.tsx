@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { theme } from '../constants/theme';
 import { useAuthStore } from '../store/auth';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const queryClient = new QueryClient();
 
@@ -40,23 +41,29 @@ export default function RootLayout() {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <SafeAreaProvider>
-        <ThemeProvider value={DefaultTheme}>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="(auth)/login" options={{ headerShown: false, animation: 'fade' }} />
-            <Stack.Screen name="(auth)/register" options={{ title: 'Registro', headerBackTitle: 'Login' }} />
-            <Stack.Screen name="select-transport" options={{ headerShown: false }} />
-            <Stack.Screen name="purchase-ticket" options={{ headerShown: false }} />
-            <Stack.Screen name="ticket-detail" options={{ headerShown: false, presentation: 'modal' }} />
-            <Stack.Screen name="edit-profile" options={{ headerShown: false }} />
-            <Stack.Screen name="change-password" options={{ headerShown: false }} />
-            <Stack.Screen name="+not-found" />
-          </Stack>
-          <StatusBar style="dark" />
-        </ThemeProvider>
-      </SafeAreaProvider>
-    </QueryClientProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <QueryClientProvider client={queryClient}>
+        <SafeAreaProvider>
+          <ThemeProvider value={DefaultTheme}>
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="(auth)/login" options={{ headerShown: false, animation: 'fade' }} />
+              <Stack.Screen name="(auth)/register" options={{ title: 'Registro', headerBackTitle: 'Login' }} />
+              <Stack.Screen name="select-transport" options={{ headerShown: false }} />
+              <Stack.Screen name="purchase-ticket" options={{ headerShown: false }} />
+              <Stack.Screen name="ticket-detail" options={{ headerShown: false, presentation: 'modal' }} />
+              <Stack.Screen name="edit-profile" options={{ headerShown: false }} />
+              <Stack.Screen name="change-password" options={{ headerShown: false }} />
+              <Stack.Screen name="admin/transport-types" options={{ headerShown: false }} />
+              <Stack.Screen name="admin/routes" options={{ headerShown: false }} />
+              <Stack.Screen name="admin/edit-route" options={{ headerShown: false }} />
+              <Stack.Screen name="admin/edit-transport-type" options={{ headerShown: false }} />
+              <Stack.Screen name="+not-found" />
+            </Stack>
+            <StatusBar style="dark" />
+          </ThemeProvider>
+        </SafeAreaProvider>
+      </QueryClientProvider>
+    </GestureHandlerRootView>
   );
 }

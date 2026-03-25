@@ -1,17 +1,73 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import DraggableFlatList, { ScaleDecorator } from 'react-native-draggable-flatlist';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Save, Plus, Trash2, MapPin, DollarSign, GripVertical, Info } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { api } from '../../lib/api';
+import { useTransportRoutes, useRouteFares, useCreateRoute, useUpdateRoute } from '../../lib/queries';
 import { PricingStrategy, CreateRouteDto, CreateStopDto, CreatePointToPointFareDto, TransportTypeDto } from '@via-libre/shared-types';
 import { theme } from '../../constants/theme';
+
+const StopItem = React.memo(({ stop, index, drag, isActive, onUpdate, onRemove }: any) => {
+  return (
+    <ScaleDecorator>
+      <View style={[styles.stopCard, isActive && { backgroundColor: theme.colors.neutral[100], borderColor: theme.colors.primary.esmeralda }]}>
+        <TouchableOpacity 
+          onLongPress={drag} 
+          delayLongPress={100}
+          style={styles.dragHandle}
+        >
+          <GripVertical size={20} color={theme.colors.neutral[400]} />
+        </TouchableOpacity>
+        <View style={styles.stopOrder}>
+          <Text style={styles.stopOrderText}>{stop.order}</Text>
+        </View>
+        <View style={styles.stopForm}>
+          <TextInput
+            style={styles.stopInput}
+            value={stop.name}
+            onChangeText={(text) => onUpdate(index, 'name', text)}
+            placeholder="Nombre de la parada"
+          />
+          <View style={styles.coordRow}>
+            <TextInput
+              style={[styles.stopInput, { flex: 1, marginBottom: 0 }]}
+              value={stop.lat.toString()}
+              onChangeText={(text) => onUpdate(index, 'lat', parseFloat(text) || 0)}
+              keyboardType="numeric"
+              placeholder="Lat"
+            />
+            <TextInput
+              style={[styles.stopInput, { flex: 1, marginBottom: 0 }]}
+              value={stop.lng.toString()}
+              onChangeText={(text) => onUpdate(index, 'lng', parseFloat(text) || 0)}
+              keyboardType="numeric"
+              placeholder="Lng"
+            />
+          </View>
+        </View>
+        <TouchableOpacity onPress={() => onRemove(index)} style={styles.removeBtn}>
+          <Trash2 size={20} color={theme.colors.semantic.error} />
+        </TouchableOpacity>
+      </View>
+    </ScaleDecorator>
+  );
+});
 
 export default function AdminEditRouteScreen() {
   const router = useRouter();
   const { id, typeId } = useLocalSearchParams();
   const isEditing = !!id;
+
+  const { data: transportTypes, isLoading: isLoadingTypes } = useTransportRoutes();
+  
+  // Conditionally fetch fares if we're editing
+  const { data: apiFares, isLoading: isLoadingFares } = useRouteFares(id as string);
+  
+  const createRoute = useCreateRoute();
+  const updateRoute = useUpdateRoute();
 
   const [form, setForm] = useState<Omit<CreateRouteDto, 'transportTypeId'>>({
     name: '',
@@ -21,63 +77,45 @@ export default function AdminEditRouteScreen() {
     fares: [],
   });
 
-  const [loading, setLoading] = useState(isEditing);
-  const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'BASIC' | 'STOPS' | 'FARES'>('BASIC');
 
+  const route = transportTypes?.find(t => t.id === typeId)?.routes.find(r => r.id === id);
+  const loading = isEditing ? (isLoadingTypes || isLoadingFares) : false;
+
   useEffect(() => {
-    if (isEditing) {
-      fetchRoute();
+    if (isEditing && route && apiFares) {
+      // Map stops and fares back to create format
+      const stops = route.stops.sort((a: any, b: any) => a.order - b.order).map((s: any) => ({
+        id: s.id,
+        name: s.name,
+        lat: s.lat,
+        lng: s.lng,
+        order: s.order,
+      }));
+
+      const fares = apiFares.map((f: any) => {
+        const originIdx = route.stops.findIndex((s: any) => s.id === f.originStopId);
+        const destIdx = route.stops.findIndex((s: any) => s.id === f.destinationStopId);
+        return {
+          originStopIndex: originIdx,
+          destinationStopIndex: destIdx,
+          fareAmount: f.fareAmount,
+        };
+      });
+
+      setForm({
+        name: route.name,
+        pricingStrategy: route.pricingStrategy,
+        baseFare: route.baseFare,
+        stops,
+        fares,
+      });
     }
-  }, [id]);
-
-  const fetchRoute = async () => {
-    try {
-      const response = await api.get('/transport/routes');
-      const transportType = response.data.find((t: TransportTypeDto) => t.id === typeId);
-      const route = transportType?.routes.find((r: any) => r.id === id);
-      
-      if (route) {
-        // Fetch fares for this route
-        const faresResponse = await api.get(`/transport/routes/${id}/fares`);
-        const apiFares = faresResponse.data;
-
-        // Map stops and fares back to create format
-        const stops = route.stops.sort((a: any, b: any) => a.order - b.order).map((s: any) => ({
-          name: s.name,
-          lat: s.lat,
-          lng: s.lng,
-          order: s.order,
-        }));
-
-        const fares = apiFares.map((f: any) => {
-          const originIdx = route.stops.findIndex((s: any) => s.id === f.originStopId);
-          const destIdx = route.stops.findIndex((s: any) => s.id === f.destinationStopId);
-          return {
-            originStopIndex: originIdx,
-            destinationStopIndex: destIdx,
-            fareAmount: f.fareAmount,
-          };
-        });
-
-        setForm({
-          name: route.name,
-          pricingStrategy: route.pricingStrategy,
-          baseFare: route.baseFare,
-          stops,
-          fares,
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching route:', error);
-      Alert.alert("Error", "No se pudo cargar la información de la ruta.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [isEditing, route, apiFares]);
 
   const handleAddStop = () => {
-    const newStop: CreateStopDto = {
+    const newStop: any = {
+      id: `new-${Date.now()}`,
       name: '',
       lat: 5.067,
       lng: -75.517,
@@ -146,20 +184,17 @@ export default function AdminEditRouteScreen() {
       return;
     }
 
-    setSaving(true);
     try {
-      const payload = { ...form, transportTypeId: typeId };
+      const payload = { ...form, transportTypeId: typeId as string };
       if (isEditing) {
-        await api.patch(`/transport/routes/${id}`, payload);
+        await updateRoute.mutateAsync({ id: id as string, data: payload });
       } else {
-        await api.post('/transport/routes', payload);
+        await createRoute.mutateAsync(payload);
       }
       router.back();
     } catch (error) {
       console.error('Error saving route:', error);
       Alert.alert("Error", "No se pudo guardar la ruta.");
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -172,15 +207,16 @@ export default function AdminEditRouteScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
-      <View style={styles.header}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaView style={styles.container}>
+        <StatusBar style="dark" />
+        <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <ChevronLeft size={28} color={theme.colors.neutral[900]} />
         </TouchableOpacity>
         <Text style={styles.title}>{isEditing ? 'Editar Ruta' : 'Nueva Ruta'}</Text>
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
-          {saving ? <ActivityIndicator size="small" color="white" /> : <Save size={24} color="white" />}
+        <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={createRoute.isPending || updateRoute.isPending}>
+          {(createRoute.isPending || updateRoute.isPending) ? <ActivityIndicator size="small" color="white" /> : <Save size={24} color="white" />}
         </TouchableOpacity>
       </View>
 
@@ -207,12 +243,9 @@ export default function AdminEditRouteScreen() {
         )}
       </View>
 
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
-        style={{ flex: 1 }}
-      >
-        <ScrollView contentContainerStyle={styles.scroll}>
-          {activeTab === 'BASIC' && (
+      <View style={{ flex: 1 }}>
+        {activeTab === 'BASIC' && (
+          <ScrollView contentContainerStyle={styles.scroll}>
             <View style={styles.section}>
               <Text style={styles.label}>Nombre de la Ruta</Text>
               <TextInput
@@ -256,136 +289,135 @@ export default function AdminEditRouteScreen() {
                 </Text>
               </View>
             </View>
-          )}
+          </ScrollView>
+        )}
 
-          {activeTab === 'STOPS' && (
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
+        {activeTab === 'STOPS' && (
+          <DraggableFlatList
+            data={form.stops || []}
+            keyExtractor={(item: any) => item.id || item.name}
+            contentContainerStyle={styles.scroll}
+            onDragEnd={({ data }: { data: any[] }) => {
+              const oldIndexToNewIndex = new Map<number, number>();
+              data.forEach((stop: any, newIndex: number) => {
+                oldIndexToNewIndex.set(stop.order - 1, newIndex);
+              });
+
+              const newStops = data.map((s: any, i: number) => ({ ...s, order: i + 1 }));
+              
+              const newFares = (form.fares || []).map(fare => ({
+                ...fare,
+                originStopIndex: oldIndexToNewIndex.has(fare.originStopIndex) 
+                  ? oldIndexToNewIndex.get(fare.originStopIndex)! 
+                  : fare.originStopIndex,
+                destinationStopIndex: oldIndexToNewIndex.has(fare.destinationStopIndex) 
+                  ? oldIndexToNewIndex.get(fare.destinationStopIndex)! 
+                  : fare.destinationStopIndex,
+              }));
+
+              setForm({ ...form, stops: newStops, fares: newFares });
+            }}
+            renderItem={({ item, getIndex, drag, isActive }: any) => (
+              <StopItem 
+                stop={item} 
+                index={getIndex()} 
+                drag={drag} 
+                isActive={isActive} 
+                onUpdate={handleUpdateStop}
+                onRemove={handleRemoveStop}
+              />
+            )}
+            ListHeaderComponent={
+              <View style={[styles.sectionHeader, { marginBottom: 16 }]}>
                 <Text style={styles.label}>Paradas en Orden</Text>
                 <TouchableOpacity style={styles.addSmallBtn} onPress={handleAddStop}>
                   <Plus size={16} color="white" />
                   <Text style={styles.addSmallBtnText}>Añadir</Text>
                 </TouchableOpacity>
               </View>
+            }
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>No hay paradas definidas.</Text>
+            }
+          />
+        )}
 
-              {(form.stops || []).map((stop, index) => (
-                <View key={index} style={styles.stopCard}>
-                  <View style={styles.stopOrder}>
-                    <Text style={styles.stopOrderText}>{stop.order}</Text>
+        {activeTab === 'FARES' && (
+          <ScrollView contentContainerStyle={styles.scroll}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.label}>Tabla de Tarifas</Text>
+              <TouchableOpacity style={styles.addSmallBtn} onPress={handleAddFare}>
+                <Plus size={16} color="white" />
+                <Text style={styles.addSmallBtnText}>Añadir Tarifa</Text>
+              </TouchableOpacity>
+            </View>
+
+            {(form.fares || []).map((fare, index) => (
+              <View key={index} style={styles.fareCard}>
+                <View style={styles.fareFlow}>
+                  <View style={styles.fareSelector}>
+                    <Text style={styles.fareLabel}>Desde:</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                      <View style={styles.stopPills}>
+                        {form.stops?.map((s, sIdx) => (
+                          <TouchableOpacity 
+                            key={sIdx} 
+                            style={[styles.stopPill, fare.originStopIndex === sIdx && styles.stopPillActive]}
+                            onPress={() => handleUpdateFare(index, 'originStopIndex', sIdx)}
+                          >
+                            <Text style={[styles.stopPillText, fare.originStopIndex === sIdx && styles.stopPillTextActive]}>
+                              {s.name || `P${sIdx + 1}`}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </ScrollView>
                   </View>
-                  <View style={styles.stopForm}>
+                  
+                  <View style={styles.fareSelector}>
+                    <Text style={styles.fareLabel}>Hacia:</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                      <View style={styles.stopPills}>
+                        {form.stops?.map((s, sIdx) => (
+                          <TouchableOpacity 
+                            key={sIdx} 
+                            style={[styles.stopPill, fare.destinationStopIndex === sIdx && styles.stopPillActive]}
+                            onPress={() => handleUpdateFare(index, 'destinationStopIndex', sIdx)}
+                          >
+                            <Text style={[styles.stopPillText, fare.destinationStopIndex === sIdx && styles.stopPillTextActive]}>
+                              {s.name || `P${sIdx + 1}`}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </ScrollView>
+                  </View>
+
+                  <View style={styles.fareInputRow}>
+                    <DollarSign size={20} color={theme.colors.primary.esmeralda} />
                     <TextInput
-                      style={styles.stopInput}
-                      value={stop.name}
-                      onChangeText={(text) => handleUpdateStop(index, 'name', text)}
-                      placeholder="Nombre de la parada"
+                      style={[styles.input, { flex: 1, marginBottom: 0 }]}
+                      value={fare.fareAmount.toString()}
+                      onChangeText={(text) => handleUpdateFare(index, 'fareAmount', parseInt(text) || 0)}
+                      keyboardType="numeric"
+                      placeholder="Valor"
                     />
-                    <View style={styles.coordRow}>
-                      <TextInput
-                        style={[styles.stopInput, { flex: 1, marginBottom: 0 }]}
-                        value={stop.lat.toString()}
-                        onChangeText={(text) => handleUpdateStop(index, 'lat', parseFloat(text) || 0)}
-                        keyboardType="numeric"
-                        placeholder="Lat"
-                      />
-                      <TextInput
-                        style={[styles.stopInput, { flex: 1, marginBottom: 0 }]}
-                        value={stop.lng.toString()}
-                        onChangeText={(text) => handleUpdateStop(index, 'lng', parseFloat(text) || 0)}
-                        keyboardType="numeric"
-                        placeholder="Lng"
-                      />
-                    </View>
+                    <TouchableOpacity onPress={() => handleRemoveFare(index)} style={styles.removeBtn}>
+                      <Trash2 size={20} color={theme.colors.semantic.error} />
+                    </TouchableOpacity>
                   </View>
-                  <TouchableOpacity onPress={() => handleRemoveStop(index)} style={styles.removeBtn}>
-                    <Trash2 size={20} color={theme.colors.semantic.error} />
-                  </TouchableOpacity>
                 </View>
-              ))}
-
-              {(form.stops || []).length === 0 && (
-                <Text style={styles.emptyText}>No hay paradas definidas.</Text>
-              )}
-            </View>
-          )}
-
-          {activeTab === 'FARES' && (
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.label}>Tabla de Tarifas</Text>
-                <TouchableOpacity style={styles.addSmallBtn} onPress={handleAddFare}>
-                  <Plus size={16} color="white" />
-                  <Text style={styles.addSmallBtnText}>Añadir Tarifa</Text>
-                </TouchableOpacity>
               </View>
+            ))}
 
-              {(form.fares || []).map((fare, index) => (
-                <View key={index} style={styles.fareCard}>
-                  <View style={styles.fareFlow}>
-                    <View style={styles.fareSelector}>
-                      <Text style={styles.fareLabel}>Desde:</Text>
-                      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        <View style={styles.stopPills}>
-                          {form.stops?.map((s, sIdx) => (
-                            <TouchableOpacity 
-                              key={sIdx} 
-                              style={[styles.stopPill, fare.originStopIndex === sIdx && styles.stopPillActive]}
-                              onPress={() => handleUpdateFare(index, 'originStopIndex', sIdx)}
-                            >
-                              <Text style={[styles.stopPillText, fare.originStopIndex === sIdx && styles.stopPillTextActive]}>
-                                {s.name || `P${sIdx + 1}`}
-                              </Text>
-                            </TouchableOpacity>
-                          ))}
-                        </View>
-                      </ScrollView>
-                    </View>
-                    
-                    <View style={styles.fareSelector}>
-                      <Text style={styles.fareLabel}>Hacia:</Text>
-                      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        <View style={styles.stopPills}>
-                          {form.stops?.map((s, sIdx) => (
-                            <TouchableOpacity 
-                              key={sIdx} 
-                              style={[styles.stopPill, fare.destinationStopIndex === sIdx && styles.stopPillActive]}
-                              onPress={() => handleUpdateFare(index, 'destinationStopIndex', sIdx)}
-                            >
-                              <Text style={[styles.stopPillText, fare.destinationStopIndex === sIdx && styles.stopPillTextActive]}>
-                                {s.name || `P${sIdx + 1}`}
-                              </Text>
-                            </TouchableOpacity>
-                          ))}
-                        </View>
-                      </ScrollView>
-                    </View>
-
-                    <View style={styles.fareInputRow}>
-                      <DollarSign size={20} color={theme.colors.primary.esmeralda} />
-                      <TextInput
-                        style={[styles.input, { flex: 1, marginBottom: 0 }]}
-                        value={fare.fareAmount.toString()}
-                        onChangeText={(text) => handleUpdateFare(index, 'fareAmount', parseInt(text) || 0)}
-                        keyboardType="numeric"
-                        placeholder="Valor"
-                      />
-                      <TouchableOpacity onPress={() => handleRemoveFare(index)} style={styles.removeBtn}>
-                        <Trash2 size={20} color={theme.colors.semantic.error} />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </View>
-              ))}
-
-              {(form.fares || []).length === 0 && (
-                <Text style={styles.emptyText}>No hay tarifas configuradas para esta ruta.</Text>
-              )}
-            </View>
-          )}
-          <View style={{ height: 100 }} />
-        </ScrollView>
-      </KeyboardAvoidingView>
+            {(form.fares || []).length === 0 && (
+              <Text style={styles.emptyText}>No hay tarifas configuradas para esta ruta.</Text>
+            )}
+          </ScrollView>
+        )}
+      </View>
     </SafeAreaView>
+    </GestureHandlerRootView>
   );
 }
 
@@ -542,6 +574,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: theme.colors.neutral[200],
+  },
+  dragHandle: {
+    padding: 4,
+    marginRight: -4,
   },
   stopOrder: {
     width: 32,

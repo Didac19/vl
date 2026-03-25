@@ -4,29 +4,24 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Plus, Edit2, Trash2, Bus, Train, Navigation } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { api } from '../../lib/api';
-import { TransportTypeDto, TransportType } from '@via-libre/shared-types';
+import { useTransportRoutes, useDeleteTransportType } from '../../lib/queries';
+import { useAuthStore } from '../../store/auth';
+import { TransportTypeDto, TransportType, UserRole } from '@via-libre/shared-types';
 import { theme } from '../../constants/theme';
 
 export default function AdminTransportTypesScreen() {
   const router = useRouter();
-  const [types, setTypes] = useState<TransportTypeDto[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === UserRole.ADMIN;
+  const params = user?.role === UserRole.COMPANY_ADMIN ? { companyId: user.companyId } : {};
+  const { data: rawTypes, isLoading: loading } = useTransportRoutes(params);
+  const deleteType = useDeleteTransportType();
 
-  useEffect(() => {
-    fetchTypes();
-  }, []);
-
-  const fetchTypes = async () => {
-    try {
-      const response = await api.get('/transport/routes');
-      setTypes(response.data);
-    } catch (error) {
-      console.error('Error fetching transport types:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  let types = rawTypes || [];
+  // If Company Admin, only show categories that have at least one route for them
+  if (user?.role === UserRole.COMPANY_ADMIN) {
+    types = types.filter((t: TransportTypeDto) => t.routes.length > 0);
+  }
 
   const handleDelete = (id: string, name: string) => {
     Alert.alert(
@@ -34,13 +29,12 @@ export default function AdminTransportTypesScreen() {
       `¿Estás seguro de que quieres eliminar "${name}"? Esta acción no se puede deshacer y eliminará todas las rutas asociadas.`,
       [
         { text: "Cancelar", style: "cancel" },
-        { 
-          text: "Eliminar", 
-          style: "destructive", 
+        {
+          text: "Eliminar",
+          style: "destructive",
           onPress: async () => {
             try {
-              await api.delete(`/transport/types/${id}`);
-              fetchTypes();
+              await deleteType.mutateAsync(id);
             } catch (error) {
               Alert.alert("Error", "No se pudo eliminar el tipo de transporte.");
             }
@@ -66,13 +60,15 @@ export default function AdminTransportTypesScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <ChevronLeft size={28} color={theme.colors.neutral[900]} />
         </TouchableOpacity>
-        <Text style={styles.title}>Gestionar Transporte</Text>
-        <TouchableOpacity 
-          style={styles.addButton} 
-          onPress={() => router.push('/admin/edit-transport-type')}
-        >
-          <Plus size={24} color="white" />
-        </TouchableOpacity>
+        <Text style={styles.title}>{isAdmin ? "Gestionar Transporte" : "Mis Categorías"}</Text>
+        {isAdmin ? (
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => router.push('/admin/edit-transport-type')}
+          >
+            <Plus size={24} color="white" />
+          </TouchableOpacity>
+        ) : <View style={{ width: 40 }} />}
       </View>
 
       {loading ? (
@@ -82,8 +78,8 @@ export default function AdminTransportTypesScreen() {
       ) : (
         <ScrollView contentContainerStyle={styles.scroll}>
           {types.map((item) => (
-            <TouchableOpacity 
-              key={item.id} 
+            <TouchableOpacity
+              key={item.id}
               style={styles.card}
               onPress={() => router.push({ pathname: '/admin/routes', params: { typeId: item.id, typeName: item.name } })}
             >
@@ -91,23 +87,27 @@ export default function AdminTransportTypesScreen() {
                 <View style={styles.iconBox}>{getIcon(item.type)}</View>
                 <View>
                   <Text style={styles.cardTitle}>{item.name}</Text>
-                  <Text style={styles.cardSubtitle}>{item.routes.length} Rutas configuradas</Text>
+                  <Text style={styles.cardSubtitle}>
+                    {item.routes.length} {item.routes.length === 1 ? 'Ruta configurada' : 'Rutas configuradas'}
+                  </Text>
                 </View>
               </View>
-              <View style={styles.cardActions}>
-                <TouchableOpacity 
-                  onPress={() => router.push({ pathname: '/admin/edit-transport-type', params: { id: item.id } })}
-                  style={styles.actionBtn}
-                >
-                  <Edit2 size={20} color={theme.colors.neutral[500]} />
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  onPress={() => handleDelete(item.id, item.name)}
-                  style={styles.actionBtn}
-                >
-                  <Trash2 size={20} color={theme.colors.semantic.error} />
-                </TouchableOpacity>
-              </View>
+              {isAdmin && (
+                <View style={styles.cardActions}>
+                  <TouchableOpacity
+                    onPress={() => router.push({ pathname: '/admin/edit-transport-type', params: { id: item.id } })}
+                    style={styles.actionBtn}
+                  >
+                    <Edit2 size={20} color={theme.colors.neutral[500]} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => handleDelete(item.id, item.name)}
+                    style={styles.actionBtn}
+                  >
+                    <Trash2 size={20} color={theme.colors.semantic.error} />
+                  </TouchableOpacity>
+                </View>
+              )}
             </TouchableOpacity>
           ))}
 

@@ -5,7 +5,7 @@ import { ChevronLeft, User, Phone, Save, Trash2 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useAuthStore } from '../store/auth';
-import { api } from '../lib/api';
+import { useUpdateProfile, useDeleteAccount } from '../lib/queries';
 
 const colors = {
   background: "#fcf9f5",
@@ -25,8 +25,9 @@ export default function EditProfileScreen() {
   
   const [fullName, setFullName] = useState(user?.fullName || '');
   const [phone, setPhone] = useState(user?.phone || '');
-  const [loading, setLoading] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  
+  const updateProfile = useUpdateProfile();
+  const deleteAccount = useDeleteAccount();
 
   const handleSave = async () => {
     if (!fullName.trim()) {
@@ -34,9 +35,8 @@ export default function EditProfileScreen() {
       return;
     }
 
-    setLoading(true);
     try {
-      await api.patch('/users/me', { fullName, phone });
+      await updateProfile.mutateAsync({ fullName, phone });
       await fetchProfile();
       Alert.alert('Éxito', 'Perfil actualizado correctamente', [
         { text: 'OK', onPress: () => router.back() }
@@ -44,8 +44,6 @@ export default function EditProfileScreen() {
     } catch (error: any) {
       console.error(error);
       Alert.alert('Error', 'No se pudo actualizar el perfil');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -59,15 +57,13 @@ export default function EditProfileScreen() {
           text: 'Eliminar definitivamente', 
           style: 'destructive',
           onPress: async () => {
-            setDeleting(true);
             try {
-              await api.delete('/users/me');
+              await deleteAccount.mutateAsync();
               await logout();
               router.replace('/(auth)/login');
             } catch (error) {
               console.error(error);
               Alert.alert('Error', 'No se pudo eliminar la cuenta');
-              setDeleting(false);
             }
           }
         }
@@ -135,11 +131,11 @@ export default function EditProfileScreen() {
 
           {/* Save Button */}
           <TouchableOpacity 
-            style={[styles.saveButton, loading && styles.disabledButton]} 
+            style={[styles.saveButton, updateProfile.isPending && styles.disabledButton]} 
             onPress={handleSave}
-            disabled={loading}
+            disabled={updateProfile.isPending}
           >
-            {loading ? (
+            {updateProfile.isPending ? (
               <ActivityIndicator color="white" />
             ) : (
               <>
@@ -154,11 +150,11 @@ export default function EditProfileScreen() {
         <View style={styles.dangerZone}>
           <Text style={styles.dangerTitle}>Zona de Peligro</Text>
           <TouchableOpacity 
-            style={[styles.deleteButton, deleting && styles.disabledButton]} 
+            style={[styles.deleteButton, deleteAccount.isPending && styles.disabledButton]} 
             onPress={handleDeleteAccount}
-            disabled={deleting}
+            disabled={deleteAccount.isPending}
           >
-            {deleting ? (
+            {deleteAccount.isPending ? (
               <ActivityIndicator color={colors.error} />
             ) : (
               <>

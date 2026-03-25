@@ -4,33 +4,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Plus, Edit2, Trash2, MapPin, DollarSign } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { api } from '../../lib/api';
-import { TransportTypeDto, RouteDto } from '@via-libre/shared-types';
+import { useTransportRoutes, useDeleteRoute } from '../../lib/queries';
+import { useAuthStore } from '../../store/auth';
+import { TransportTypeDto, RouteDto, UserRole } from '@via-libre/shared-types';
 import { theme } from '../../constants/theme';
 
 export default function AdminRoutesScreen() {
   const router = useRouter();
+  const { user } = useAuthStore();
   const { typeId, typeName } = useLocalSearchParams();
-  const [routes, setRoutes] = useState<RouteDto[]>([]);
-  const [loading, setLoading] = useState(true);
+  const params = user?.role === UserRole.COMPANY_ADMIN ? { companyId: user.companyId } : {};
+  const { data: transportTypes, isLoading: loading } = useTransportRoutes(params);
+  const deleteRoute = useDeleteRoute();
 
-  useEffect(() => {
-    fetchRoutes();
-  }, []);
-
-  const fetchRoutes = async () => {
-    try {
-      const response = await api.get('/transport/routes');
-      const transportType = response.data.find((t: TransportTypeDto) => t.id === typeId);
-      if (transportType) {
-        setRoutes(transportType.routes);
-      }
-    } catch (error) {
-      console.error('Error fetching routes:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const routes = transportTypes?.find((t: TransportTypeDto) => t.id === typeId)?.routes || [];
 
   const handleDelete = (id: string, name: string) => {
     Alert.alert(
@@ -38,13 +25,12 @@ export default function AdminRoutesScreen() {
       `¿Estás seguro de que quieres eliminar "${name}"?`,
       [
         { text: "Cancelar", style: "cancel" },
-        { 
-          text: "Eliminar", 
-          style: "destructive", 
+        {
+          text: "Eliminar",
+          style: "destructive",
           onPress: async () => {
             try {
-              await api.delete(`/transport/routes/${id}`);
-              fetchRoutes();
+              await deleteRoute.mutateAsync(id);
             } catch (error) {
               Alert.alert("Error", "No se pudo eliminar la ruta.");
             }
@@ -65,8 +51,8 @@ export default function AdminRoutesScreen() {
           <Text style={styles.title}>Rutas</Text>
           <Text style={styles.subtitle}>{typeName}</Text>
         </View>
-        <TouchableOpacity 
-          style={styles.addButton} 
+        <TouchableOpacity
+          style={styles.addButton}
           onPress={() => router.push({ pathname: '/admin/edit-route', params: { typeId } })}
         >
           <Plus size={24} color="white" />
@@ -80,8 +66,8 @@ export default function AdminRoutesScreen() {
       ) : (
         <ScrollView contentContainerStyle={styles.scroll}>
           {routes.map((route) => (
-            <TouchableOpacity 
-              key={route.id} 
+            <TouchableOpacity
+              key={route.id}
               style={styles.card}
               onPress={() => router.push({ pathname: '/admin/edit-route', params: { id: route.id, typeId } })}
             >
@@ -94,7 +80,7 @@ export default function AdminRoutesScreen() {
                     </Text>
                   </View>
                 </View>
-                
+
                 <View style={styles.routeStats}>
                   <View style={styles.statItem}>
                     <MapPin size={16} color={theme.colors.neutral[500]} />
@@ -107,13 +93,13 @@ export default function AdminRoutesScreen() {
                 </View>
               </View>
               <View style={styles.cardActions}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => router.push({ pathname: '/admin/edit-route', params: { id: route.id, typeId } })}
                   style={styles.actionBtn}
                 >
                   <Edit2 size={20} color={theme.colors.neutral[500]} />
                 </TouchableOpacity>
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => handleDelete(route.id, route.name)}
                   style={styles.actionBtn}
                 >

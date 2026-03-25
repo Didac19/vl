@@ -4,6 +4,7 @@ import { TransportType } from '../../modules/transport/entities/transport-type.e
 import { Route } from '../../modules/transport/entities/route.entity';
 import { Stop } from '../../modules/transport/entities/stop.entity';
 import { PointToPointFare } from '../../modules/transport/entities/point-to-point-fare.entity';
+import { Company } from '../../modules/companies/entities/company.entity';
 import * as Shared from '@via-libre/shared-types';
 
 export default class TransportSeeder implements Seeder {
@@ -12,11 +13,13 @@ export default class TransportSeeder implements Seeder {
     const routeRepo = dataSource.getRepository(Route);
     const stopRepo = dataSource.getRepository(Stop);
     const fareRepo = dataSource.getRepository(PointToPointFare);
+    const companyRepo = dataSource.getRepository(Company);
 
     const transportData = [
       {
         name: 'Cable Aéreo',
         type: 'CABLE_AEREO' as Shared.TransportType,
+        companyName: 'Cable Aéreo Manizales',
         fareAmount: 2500,
         requiresRouteSelection: true,
         routes: [
@@ -48,6 +51,7 @@ export default class TransportSeeder implements Seeder {
       {
         name: 'Bus Urbano',
         type: 'BUS_URBANO' as Shared.TransportType,
+        companyName: 'Sideral S.A.',
         fareAmount: 2500,
         requiresRouteSelection: true,
         routes: [
@@ -66,6 +70,7 @@ export default class TransportSeeder implements Seeder {
       {
         name: 'Intermunicipal',
         type: 'INTERMUNICIPAL' as Shared.TransportType,
+        companyName: 'Socobuses S.A.',
         fareAmount: 4500,
         requiresRouteSelection: true,
         routes: [
@@ -90,6 +95,7 @@ export default class TransportSeeder implements Seeder {
       {
         name: 'Buseta / Colectivo',
         type: 'BUSETA' as Shared.TransportType,
+        companyName: 'Socobuses S.A.',
         fareAmount: 2700,
         requiresRouteSelection: false,
         routes: [
@@ -104,6 +110,8 @@ export default class TransportSeeder implements Seeder {
     ];
 
     for (const data of transportData) {
+      const company = await companyRepo.findOneBy({ name: data.companyName });
+
       let transportType = await typeRepo.findOne({
         where: { type: data.type },
         relations: ['routes']
@@ -132,7 +140,8 @@ export default class TransportSeeder implements Seeder {
             name: rData.name,
             transportType: transportType,
             pricingStrategy: rData.pricingStrategy,
-            baseFare: rData.baseFare
+            baseFare: rData.baseFare,
+            company: company || undefined
           });
           await routeRepo.save(route);
 
@@ -155,6 +164,12 @@ export default class TransportSeeder implements Seeder {
               });
               await fareRepo.save(fare);
             }
+          }
+        } else {
+          // Update existing route with company if missing
+          if (!route.company && company) {
+            route.company = company;
+            await routeRepo.save(route);
           }
         }
       }

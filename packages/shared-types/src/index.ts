@@ -18,11 +18,52 @@ export interface AuthTokensDto {
 
 export const UserRole = {
   ADMIN: 'ADMIN',
-  USER: 'USER',
+  COMPANY_ADMIN: 'COMPANY_ADMIN',
   DRIVER: 'DRIVER',
+  USER: 'USER',
 } as const;
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
+
+// ─── Company ───────────────────────────────────────────────────────────────
+export interface CompanyDto {
+  id: string;
+  name: string;
+  nit: string;
+  address?: string;
+  phone?: string;
+  createdAt: string;
+}
+
+export interface CreateCompanyDto {
+  name: string;
+  nit: string;
+  address?: string;
+  phone?: string;
+}
+
+// ─── Validator ─────────────────────────────────────────────────────────────
+export interface ValidatorDto {
+  id: string;
+  deviceId: string;
+  name: string;
+  companyId: string;
+  lastSyncAt?: string;
+}
+
+export interface CreateValidatorDto {
+  deviceId: string;
+  name: string;
+  companyId: string;
+}
+
+export interface ScanTicketDto {
+  ticketId: string;
+  validatorId: string;
+  scannedAt: string;
+  lat?: number;
+  lng?: number;
+}
 
 // ─── User ──────────────────────────────────────────────────────────────────
 export interface UserDto {
@@ -31,6 +72,7 @@ export interface UserDto {
   email: string;
   phone: string;
   role: UserRole;
+  companyId?: string;
   createdAt: string;
 }
 

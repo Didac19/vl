@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Save } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { api } from '../../lib/api';
+import { useTransportRoutes, useCreateTransportType, useUpdateTransportType } from '../../lib/queries';
 import { TransportType, CreateTransportTypeDto } from '@via-libre/shared-types';
 import { theme } from '../../constants/theme';
 
@@ -22,40 +22,31 @@ export default function AdminEditTransportTypeScreen() {
   const { id } = useLocalSearchParams();
   const isEditing = !!id;
 
+  const { data: transportTypes, isLoading: isLoadingTypes } = useTransportRoutes();
+  const loading = isEditing ? isLoadingTypes : false;
+
+  const createTransportType = useCreateTransportType();
+  const updateTransportType = useUpdateTransportType();
+
   const [form, setForm] = useState<CreateTransportTypeDto>({
     name: '',
     type: 'BUS_URBANO',
     fareAmount: 0,
     requiresRouteSelection: true,
   });
-  const [loading, setLoading] = useState(isEditing);
-  const [saving, setSaving] = useState(false);
+
+  const type = transportTypes?.find((t: any) => t.id === id);
 
   useEffect(() => {
-    if (isEditing) {
-      fetchType();
+    if (isEditing && type) {
+      setForm({
+        name: type.name,
+        type: type.type,
+        fareAmount: type.fareAmount,
+        requiresRouteSelection: type.requiresRouteSelection,
+      });
     }
-  }, [id]);
-
-  const fetchType = async () => {
-    try {
-      const response = await api.get('/transport/routes');
-      const type = response.data.find((t: any) => t.id === id);
-      if (type) {
-        setForm({
-          name: type.name,
-          type: type.type,
-          fareAmount: type.fareAmount,
-          requiresRouteSelection: type.requiresRouteSelection,
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching type:', error);
-      Alert.alert("Error", "No se pudo cargar la información.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [isEditing, type]);
 
   const handleSave = async () => {
     if (!form.name || form.fareAmount < 0) {
@@ -63,19 +54,16 @@ export default function AdminEditTransportTypeScreen() {
       return;
     }
 
-    setSaving(true);
     try {
       if (isEditing) {
-        await api.patch(`/transport/types/${id}`, form);
+        await updateTransportType.mutateAsync({ id: id as string, data: form });
       } else {
-        await api.post('/transport/types', form);
+        await createTransportType.mutateAsync(form);
       }
       router.back();
     } catch (error) {
       console.error('Error saving transport type:', error);
       Alert.alert("Error", "No se pudo guardar el tipo de transporte.");
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -95,8 +83,8 @@ export default function AdminEditTransportTypeScreen() {
           <ChevronLeft size={28} color={theme.colors.neutral[900]} />
         </TouchableOpacity>
         <Text style={styles.title}>{isEditing ? 'Editar Tipo' : 'Nuevo Tipo'}</Text>
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
-          {saving ? <ActivityIndicator size="small" color="white" /> : <Save size={24} color="white" />}
+        <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={createTransportType.isPending || updateTransportType.isPending}>
+          {(createTransportType.isPending || updateTransportType.isPending) ? <ActivityIndicator size="small" color="white" /> : <Save size={24} color="white" />}
         </TouchableOpacity>
       </View>
 

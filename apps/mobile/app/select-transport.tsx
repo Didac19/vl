@@ -4,8 +4,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Bus, Navigation, Info, Train } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { api } from '../lib/api';
+import { useTransportRoutes } from '../lib/queries';
 import { TransportTypeDto, RouteDto, TransportType } from '@via-libre/shared-types';
+import { getRouteDisplayName } from '../lib/utils';
 
 const colors = {
   background: "#fcf9f5",
@@ -41,23 +42,7 @@ export default function TransportSelectionScreen() {
   const [originStopId, setOriginStopId] = useState<string | null>(null);
   const [destinationStopId, setDestinationStopId] = useState<string | null>(null);
 
-  const [transportTypes, setTransportTypes] = useState<TransportTypeDto[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchTransportTypes();
-  }, []);
-
-  const fetchTransportTypes = async () => {
-    try {
-      const response = await api.get('/transport/routes');
-      setTransportTypes(response.data);
-    } catch (error) {
-      console.error('Error fetching transport types:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: transportTypes = [], isLoading: loading } = useTransportRoutes();
 
   const selectedType = transportTypes.find(t => t.id === selectedTypeId);
   const filteredRoutes = selectedType?.routes || [];
@@ -111,7 +96,7 @@ export default function TransportSelectionScreen() {
         pathname: '/purchase-ticket',
         params: {
           transportId: selectedRouteId,
-          transportTitle: selectedRoute.name,
+          transportTitle: getRouteDisplayName(selectedRoute),
           transportType: selectedType.type,
           baseFare: selectedRoute.baseFare,
           originStopId: originStopId || '',
@@ -213,7 +198,7 @@ export default function TransportSelectionScreen() {
             ) : isPointToPoint ? (
               // Step 3: Origin/Destination for Point to Point
               !originStopId ? (
-                selectedRoute.stops.map(stop => (
+                selectedRoute?.stops?.map(stop => (
                   <TouchableOpacity key={stop.id} style={styles.card} onPress={() => setOriginStopId(stop.id)}>
                     <View style={styles.cardContent}>
                       <View style={[styles.iconContainer, { backgroundColor: 'rgba(0,0,0,0.05)' }]}><Navigation size={24} color={colors.outline} /></View>
@@ -222,7 +207,7 @@ export default function TransportSelectionScreen() {
                   </TouchableOpacity>
                 ))
               ) : (
-                selectedRoute.stops.filter(s => s.id !== originStopId).map(stop => (
+                selectedRoute?.stops?.filter(s => s.id !== originStopId).map(stop => (
                   <TouchableOpacity key={stop.id} style={[styles.card, destinationStopId === stop.id && styles.activeCard]} onPress={() => setDestinationStopId(stop.id)}>
                     <View style={styles.cardContent}>
                       <View style={[styles.iconContainer, { backgroundColor: 'rgba(0,0,0,0.05)' }]}><Navigation size={24} color={colors.outline} /></View>

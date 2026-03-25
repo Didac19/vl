@@ -5,9 +5,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToOne,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { UserRole } from '@via-libre/shared-types';
 import { Wallet } from '../../wallet/entities/wallet.entity';
+import { Company } from '../../companies/entities/company.entity';
 
 @Entity('users')
 export class User {
@@ -28,6 +31,10 @@ export class User {
 
   @Column({ nullable: true })
   phone: string;
+
+  @ManyToOne('Company', 'users', { nullable: true })
+  @JoinColumn({ name: 'company_id' })
+  company: Company;
 
   @Column({ name: 'is_active', default: true })
   isActive: boolean;

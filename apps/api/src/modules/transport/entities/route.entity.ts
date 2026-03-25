@@ -1,8 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn, JoinColumn } from 'typeorm';
 import * as Shared from '@via-libre/shared-types';
 import { TransportType } from './transport-type.entity';
 import { Stop } from './stop.entity';
 import { PointToPointFare } from './point-to-point-fare.entity';
+import { Company } from '../../companies/entities/company.entity';
 
 @Entity('routes')
 export class Route {
@@ -11,6 +12,10 @@ export class Route {
 
   @Column()
   name: string;
+
+  @ManyToOne('Company', 'routes', { nullable: true })
+  @JoinColumn({ name: 'company_id' })
+  company: Company;
 
   @Column({
     type: 'enum',
