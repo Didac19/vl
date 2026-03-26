@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "TranSix",
-    "slug": "t6",
+    "slug": "transix",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -13,9 +13,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.transix.app"
     },
     "android": {
+      "package": "com.transix.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -34,6 +36,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "923553dd-f719-4157-9b06-97d92c50fe54"
+      }
     }
   }
 }

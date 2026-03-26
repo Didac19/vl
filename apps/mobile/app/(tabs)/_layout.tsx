@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Home, Ticket, User } from 'lucide-react-native';
+import { Home, Ticket, User, Map as MapIcon } from 'lucide-react-native';
 import { theme } from '../../constants/theme';
 
 export default function TabLayout() {
@@ -28,6 +28,13 @@ export default function TabLayout() {
         options={{
           title: 'Inicio',
           tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="near-places"
+        options={{
+          title: 'Cerca de mí',
+          tabBarIcon: ({ color, size }) => <MapIcon color={color} size={size} />,
         }}
       />
       <Tabs.Screen

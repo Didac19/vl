@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, In } from 'typeorm';
 import {
   TransportTypeDto,
   PointToPointFareDto,
@@ -205,9 +205,37 @@ export class TransportService {
   }
 
   async findNearbyStations(lat: number, lng: number) {
-    return [
-      { name: 'Estación Los Cámbulos', distance: '150m', type: 'CABLE_AEREO' },
-      { name: 'Paradero El Cable', distance: '300m', type: 'BUS_URBANO' },
-    ];
+    const radius = 5; // 5km search radius
+    
+    // First, find IDs of routes that have at least one stop nearby
+    const nearbyRouteIds = await this.stopRepo
+      .createQueryBuilder('stop')
+      .select('DISTINCT stop.routeId', 'routeId')
+      .where(
+        `6371 * acos(
+          cos(radians(:lat)) * cos(radians(stop.lat)) *
+          cos(radians(stop.lng) - radians(:lng)) +
+          sin(radians(:lat)) * sin(radians(stop.lat))
+        ) <= :radius`,
+        { lat, lng, radius },
+      )
+      .getRawMany();
+
+    if (nearbyRouteIds.length === 0) return [];
+
+    const ids = nearbyRouteIds.map(r => r.routeId);
+
+    // Then fetch full details for these routes
+    const routes = await this.routeRepo.find({
+      where: { id: In(ids) },
+      relations: ['stops', 'transportType'],
+      order: { 
+        stops: { 
+          order: 'ASC' 
+        } 
+      }
+    });
+
+    return routes;
   }
 }

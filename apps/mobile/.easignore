@@ -1,0 +1,14 @@
+# .easignore
+../../apps/api
+../api
+node_modules
+.git
+
+# Ignore git and ide folders
+.git/
+.vscode/
+.idea/
+
+# node_modules are ignored by default by EAS, but we can be explicit
+node_modules/
+**/node_modules/
