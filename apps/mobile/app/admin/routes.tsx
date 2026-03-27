@@ -6,7 +6,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useTransportRoutes, useDeleteRoute } from '../../lib/queries';
 import { useAuthStore } from '../../store/auth';
-import { TransportTypeDto, RouteDto, UserRole } from '@via-libre/shared-types';
+import { TransportTypeDto, RouteDto, UserRole } from '@transix/shared-types';
 import { theme } from '../../constants/theme';
 
 export default function AdminRoutesScreen() {

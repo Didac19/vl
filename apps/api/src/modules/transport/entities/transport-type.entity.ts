@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import * as Shared from '@via-libre/shared-types';
+import * as Shared from '@transix/shared-types';
 import { Route } from './route.entity';
 
 @Entity('transport_types')

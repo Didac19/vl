@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
-import { UserDto } from '@via-libre/shared-types';
+import { UserDto } from '@transix/shared-types';
 import { api } from '@/lib/api';
 
 interface AuthState {

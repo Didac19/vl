@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from './api';
-import { TransportTypeDto, CreateRouteDto } from '@via-libre/shared-types';
+import { TransportTypeDto, CreateRouteDto } from '@transix/shared-types';
 
 // ==== QUERY KEYS ====
 export const transportKeys = {

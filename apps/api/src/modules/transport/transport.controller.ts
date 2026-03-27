@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Patch, Delete, Body, Query, UseGuards, Param, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import * as Shared from '@via-libre/shared-types';
+import * as Shared from '@transix/shared-types';
 import { TransportService } from './transport.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';

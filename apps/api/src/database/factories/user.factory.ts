@@ -1,7 +1,7 @@
 import { setSeederFactory } from 'typeorm-extension';
 import { User } from '@/modules/users/entities/user.entity';
 import { Wallet } from '@/modules/wallet/entities/wallet.entity';
-import { UserRole } from '@via-libre/shared-types';
+import { UserRole } from '@transix/shared-types';
 import * as bcrypt from 'bcryptjs';
 
 export default setSeederFactory(User, (faker) => {

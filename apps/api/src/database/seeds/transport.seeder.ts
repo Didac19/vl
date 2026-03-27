@@ -5,7 +5,7 @@ import { Route } from '../../modules/transport/entities/route.entity';
 import { Stop } from '../../modules/transport/entities/stop.entity';
 import { PointToPointFare } from '../../modules/transport/entities/point-to-point-fare.entity';
 import { Company } from '../../modules/companies/entities/company.entity';
-import * as Shared from '@via-libre/shared-types';
+import * as Shared from '@transix/shared-types';
 
 export default class TransportSeeder implements Seeder {
   public async run(dataSource: DataSource): Promise<void> {

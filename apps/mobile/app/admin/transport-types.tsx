@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useTransportRoutes, useDeleteTransportType } from '../../lib/queries';
 import { useAuthStore } from '../../store/auth';
-import { TransportTypeDto, TransportType, UserRole } from '@via-libre/shared-types';
+import { TransportTypeDto, TransportType, UserRole } from '@transix/shared-types';
 import { theme } from '../../constants/theme';
 
 export default function AdminTransportTypesScreen() {

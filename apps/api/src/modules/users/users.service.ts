@@ -6,7 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
-import { UserRole } from '@via-libre/shared-types';
+import { UserRole } from '@transix/shared-types';
 import { User } from './entities/user.entity';
 
 @Injectable()

@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn, JoinColumn } from 'typeorm';
-import * as Shared from '@via-libre/shared-types';
+import * as Shared from '@transix/shared-types';
 import { TransportType } from './transport-type.entity';
 import { Stop } from './stop.entity';
 import { PointToPointFare } from './point-to-point-fare.entity';

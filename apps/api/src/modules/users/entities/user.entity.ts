@@ -8,7 +8,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { UserRole } from '@via-libre/shared-types';
+import { UserRole } from '@transix/shared-types';
 import { Wallet } from '../../wallet/entities/wallet.entity';
 import { Company } from '../../companies/entities/company.entity';
 

@@ -1,5 +1,5 @@
 {
-  "name": "@via-libre/api",
+  "name": "@transix/api",
   "version": "0.1.0",
   "description": "Transix API",
   "author": "Transix Team",
@@ -33,7 +33,7 @@
     "@nestjs/swagger": "^11.0.2",
     "@nestjs/throttler": "^6.3.0",
     "@nestjs/typeorm": "^11.0.0",
-    "@via-libre/shared-types": "workspace:*",
+    "@transix/shared-types": "workspace:*",
     "bcryptjs": "^2.4.3",
     "cache-manager": "^6.4.0",
     "cache-manager-redis-yet": "^5.1.5",
@@ -97,7 +97,7 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "moduleNameMapper": {
-      "@via-libre/shared-types": "<rootDir>/../../packages/shared-types/src"
+      "@transix/shared-types": "<rootDir>/../../packages/shared-types/src"
     }
   }
 }

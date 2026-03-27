@@ -7,15 +7,15 @@ import { ChevronLeft, Save, Plus, Trash2, MapPin, DollarSign, GripVertical, Info
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useTransportRoutes, useRouteFares, useCreateRoute, useUpdateRoute } from '../../lib/queries';
-import { PricingStrategy, CreateRouteDto, CreateStopDto, CreatePointToPointFareDto, TransportTypeDto } from '@via-libre/shared-types';
+import { PricingStrategy, CreateRouteDto, CreateStopDto, CreatePointToPointFareDto, TransportTypeDto } from '@transix/shared-types';
 import { theme } from '../../constants/theme';
 
 const StopItem = React.memo(({ stop, index, drag, isActive, onUpdate, onRemove }: any) => {
   return (
     <ScaleDecorator>
       <View style={[styles.stopCard, isActive && { backgroundColor: theme.colors.neutral[100], borderColor: theme.colors.primary.esmeralda }]}>
-        <TouchableOpacity 
-          onLongPress={drag} 
+        <TouchableOpacity
+          onLongPress={drag}
           delayLongPress={100}
           style={styles.dragHandle}
         >
@@ -62,10 +62,10 @@ export default function AdminEditRouteScreen() {
   const isEditing = !!id;
 
   const { data: transportTypes, isLoading: isLoadingTypes } = useTransportRoutes();
-  
+
   // Conditionally fetch fares if we're editing
   const { data: apiFares, isLoading: isLoadingFares } = useRouteFares(id as string);
-  
+
   const createRoute = useCreateRoute();
   const updateRoute = useUpdateRoute();
 
@@ -129,9 +129,9 @@ export default function AdminEditRouteScreen() {
     newStops.splice(index, 1);
     // Reorder remaining stops
     const reorderedStops = newStops.map((s, i) => ({ ...s, order: i + 1 }));
-    
+
     // Also remove any fares associated with this stop
-    const newFares = (form.fares || []).filter(f => 
+    const newFares = (form.fares || []).filter(f =>
       f.originStopIndex !== index && f.destinationStopIndex !== index
     ).map(f => ({
       ...f,
@@ -211,212 +211,212 @@ export default function AdminEditRouteScreen() {
       <SafeAreaView style={styles.container}>
         <StatusBar style="dark" />
         <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <ChevronLeft size={28} color={theme.colors.neutral[900]} />
-        </TouchableOpacity>
-        <Text style={styles.title}>{isEditing ? 'Editar Ruta' : 'Nueva Ruta'}</Text>
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={createRoute.isPending || updateRoute.isPending}>
-          {(createRoute.isPending || updateRoute.isPending) ? <ActivityIndicator size="small" color="white" /> : <Save size={24} color="white" />}
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.tabs}>
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'BASIC' && styles.activeTab]} 
-          onPress={() => setActiveTab('BASIC')}
-        >
-          <Text style={[styles.tabText, activeTab === 'BASIC' && styles.activeTabText]}>Básico</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'STOPS' && styles.activeTab]} 
-          onPress={() => setActiveTab('STOPS')}
-        >
-          <Text style={[styles.tabText, activeTab === 'STOPS' && styles.activeTabText]}>Paradas</Text>
-        </TouchableOpacity>
-        {form.pricingStrategy === 'POINT_TO_POINT' && (
-          <TouchableOpacity 
-            style={[styles.tab, activeTab === 'FARES' && styles.activeTab]} 
-            onPress={() => setActiveTab('FARES')}
-          >
-            <Text style={[styles.tabText, activeTab === 'FARES' && styles.activeTabText]}>Tarifas</Text>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <ChevronLeft size={28} color={theme.colors.neutral[900]} />
           </TouchableOpacity>
-        )}
-      </View>
+          <Text style={styles.title}>{isEditing ? 'Editar Ruta' : 'Nueva Ruta'}</Text>
+          <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={createRoute.isPending || updateRoute.isPending}>
+            {(createRoute.isPending || updateRoute.isPending) ? <ActivityIndicator size="small" color="white" /> : <Save size={24} color="white" />}
+          </TouchableOpacity>
+        </View>
 
-      <View style={{ flex: 1 }}>
-        {activeTab === 'BASIC' && (
-          <ScrollView contentContainerStyle={styles.scroll}>
-            <View style={styles.section}>
-              <Text style={styles.label}>Nombre de la Ruta</Text>
-              <TextInput
-                style={styles.input}
-                value={form.name}
-                onChangeText={(text) => setForm({ ...form, name: text })}
-                placeholder="Ej: Av. Santander (Sideral)"
-              />
+        <View style={styles.tabs}>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'BASIC' && styles.activeTab]}
+            onPress={() => setActiveTab('BASIC')}
+          >
+            <Text style={[styles.tabText, activeTab === 'BASIC' && styles.activeTabText]}>Básico</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'STOPS' && styles.activeTab]}
+            onPress={() => setActiveTab('STOPS')}
+          >
+            <Text style={[styles.tabText, activeTab === 'STOPS' && styles.activeTabText]}>Paradas</Text>
+          </TouchableOpacity>
+          {form.pricingStrategy === 'POINT_TO_POINT' && (
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'FARES' && styles.activeTab]}
+              onPress={() => setActiveTab('FARES')}
+            >
+              <Text style={[styles.tabText, activeTab === 'FARES' && styles.activeTabText]}>Tarifas</Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
-              <Text style={styles.label}>Estrategia de Precio</Text>
-              <View style={styles.strategyContainer}>
-                <TouchableOpacity 
-                  style={[styles.strategyBtn, form.pricingStrategy === 'FLAT' && styles.strategyBtnActive]}
-                  onPress={() => setForm({ ...form, pricingStrategy: 'FLAT' })}
-                >
-                  <Text style={[styles.strategyText, form.pricingStrategy === 'FLAT' && styles.strategyTextActive]}>TARIFA FIJA</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[styles.strategyBtn, form.pricingStrategy === 'POINT_TO_POINT' && styles.strategyBtnActive]}
-                  onPress={() => setForm({ ...form, pricingStrategy: 'POINT_TO_POINT' })}
-                >
-                  <Text style={[styles.strategyText, form.pricingStrategy === 'POINT_TO_POINT' && styles.strategyTextActive]}>PUNTO A PUNTO</Text>
-                </TouchableOpacity>
-              </View>
+        <View style={{ flex: 1 }}>
+          {activeTab === 'BASIC' && (
+            <ScrollView contentContainerStyle={styles.scroll}>
+              <View style={styles.section}>
+                <Text style={styles.label}>Nombre de la Ruta</Text>
+                <TextInput
+                  style={styles.input}
+                  value={form.name}
+                  onChangeText={(text) => setForm({ ...form, name: text })}
+                  placeholder="Ej: Av. Santander (Sideral)"
+                />
 
-              <Text style={styles.label}>Tarifa Base / General (COP)</Text>
-              <TextInput
-                style={styles.input}
-                value={form.baseFare.toString()}
-                onChangeText={(text) => setForm({ ...form, baseFare: parseInt(text) || 0 })}
-                keyboardType="numeric"
-                placeholder="2500"
-              />
+                <Text style={styles.label}>Estrategia de Precio</Text>
+                <View style={styles.strategyContainer}>
+                  <TouchableOpacity
+                    style={[styles.strategyBtn, form.pricingStrategy === 'FLAT' && styles.strategyBtnActive]}
+                    onPress={() => setForm({ ...form, pricingStrategy: 'FLAT' })}
+                  >
+                    <Text style={[styles.strategyText, form.pricingStrategy === 'FLAT' && styles.strategyTextActive]}>TARIFA FIJA</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.strategyBtn, form.pricingStrategy === 'POINT_TO_POINT' && styles.strategyBtnActive]}
+                    onPress={() => setForm({ ...form, pricingStrategy: 'POINT_TO_POINT' })}
+                  >
+                    <Text style={[styles.strategyText, form.pricingStrategy === 'POINT_TO_POINT' && styles.strategyTextActive]}>PUNTO A PUNTO</Text>
+                  </TouchableOpacity>
+                </View>
 
-              <View style={styles.infoBox}>
-                <Info size={16} color={theme.colors.neutral[500]} />
-                <Text style={styles.infoText}>
-                  {form.pricingStrategy === 'FLAT' 
-                    ? 'En Tarifa Fija, el usuario paga este valor sin importar el origen o destino.'
-                    : 'En Punto a Punto, debes definir precios específicos en la pestaña "Tarifas".'}
-                </Text>
-              </View>
-            </View>
-          </ScrollView>
-        )}
+                <Text style={styles.label}>Tarifa Base / General (COP)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={form.baseFare.toString()}
+                  onChangeText={(text) => setForm({ ...form, baseFare: parseInt(text) || 0 })}
+                  keyboardType="numeric"
+                  placeholder="2500"
+                />
 
-        {activeTab === 'STOPS' && (
-          <DraggableFlatList
-            data={form.stops || []}
-            keyExtractor={(item: any) => item.id || item.name}
-            contentContainerStyle={styles.scroll}
-            onDragEnd={({ data }: { data: any[] }) => {
-              const oldIndexToNewIndex = new Map<number, number>();
-              data.forEach((stop: any, newIndex: number) => {
-                oldIndexToNewIndex.set(stop.order - 1, newIndex);
-              });
-
-              const newStops = data.map((s: any, i: number) => ({ ...s, order: i + 1 }));
-              
-              const newFares = (form.fares || []).map(fare => ({
-                ...fare,
-                originStopIndex: oldIndexToNewIndex.has(fare.originStopIndex) 
-                  ? oldIndexToNewIndex.get(fare.originStopIndex)! 
-                  : fare.originStopIndex,
-                destinationStopIndex: oldIndexToNewIndex.has(fare.destinationStopIndex) 
-                  ? oldIndexToNewIndex.get(fare.destinationStopIndex)! 
-                  : fare.destinationStopIndex,
-              }));
-
-              setForm({ ...form, stops: newStops, fares: newFares });
-            }}
-            renderItem={({ item, getIndex, drag, isActive }: any) => (
-              <StopItem 
-                stop={item} 
-                index={getIndex()} 
-                drag={drag} 
-                isActive={isActive} 
-                onUpdate={handleUpdateStop}
-                onRemove={handleRemoveStop}
-              />
-            )}
-            ListHeaderComponent={
-              <View style={[styles.sectionHeader, { marginBottom: 16 }]}>
-                <Text style={styles.label}>Paradas en Orden</Text>
-                <TouchableOpacity style={styles.addSmallBtn} onPress={handleAddStop}>
-                  <Plus size={16} color="white" />
-                  <Text style={styles.addSmallBtnText}>Añadir</Text>
-                </TouchableOpacity>
-              </View>
-            }
-            ListEmptyComponent={
-              <Text style={styles.emptyText}>No hay paradas definidas.</Text>
-            }
-          />
-        )}
-
-        {activeTab === 'FARES' && (
-          <ScrollView contentContainerStyle={styles.scroll}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.label}>Tabla de Tarifas</Text>
-              <TouchableOpacity style={styles.addSmallBtn} onPress={handleAddFare}>
-                <Plus size={16} color="white" />
-                <Text style={styles.addSmallBtnText}>Añadir Tarifa</Text>
-              </TouchableOpacity>
-            </View>
-
-            {(form.fares || []).map((fare, index) => (
-              <View key={index} style={styles.fareCard}>
-                <View style={styles.fareFlow}>
-                  <View style={styles.fareSelector}>
-                    <Text style={styles.fareLabel}>Desde:</Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                      <View style={styles.stopPills}>
-                        {form.stops?.map((s, sIdx) => (
-                          <TouchableOpacity 
-                            key={sIdx} 
-                            style={[styles.stopPill, fare.originStopIndex === sIdx && styles.stopPillActive]}
-                            onPress={() => handleUpdateFare(index, 'originStopIndex', sIdx)}
-                          >
-                            <Text style={[styles.stopPillText, fare.originStopIndex === sIdx && styles.stopPillTextActive]}>
-                              {s.name || `P${sIdx + 1}`}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    </ScrollView>
-                  </View>
-                  
-                  <View style={styles.fareSelector}>
-                    <Text style={styles.fareLabel}>Hacia:</Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                      <View style={styles.stopPills}>
-                        {form.stops?.map((s, sIdx) => (
-                          <TouchableOpacity 
-                            key={sIdx} 
-                            style={[styles.stopPill, fare.destinationStopIndex === sIdx && styles.stopPillActive]}
-                            onPress={() => handleUpdateFare(index, 'destinationStopIndex', sIdx)}
-                          >
-                            <Text style={[styles.stopPillText, fare.destinationStopIndex === sIdx && styles.stopPillTextActive]}>
-                              {s.name || `P${sIdx + 1}`}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    </ScrollView>
-                  </View>
-
-                  <View style={styles.fareInputRow}>
-                    <DollarSign size={20} color={theme.colors.primary.esmeralda} />
-                    <TextInput
-                      style={[styles.input, { flex: 1, marginBottom: 0 }]}
-                      value={fare.fareAmount.toString()}
-                      onChangeText={(text) => handleUpdateFare(index, 'fareAmount', parseInt(text) || 0)}
-                      keyboardType="numeric"
-                      placeholder="Valor"
-                    />
-                    <TouchableOpacity onPress={() => handleRemoveFare(index)} style={styles.removeBtn}>
-                      <Trash2 size={20} color={theme.colors.semantic.error} />
-                    </TouchableOpacity>
-                  </View>
+                <View style={styles.infoBox}>
+                  <Info size={16} color={theme.colors.neutral[500]} />
+                  <Text style={styles.infoText}>
+                    {form.pricingStrategy === 'FLAT'
+                      ? 'En Tarifa Fija, el usuario paga este valor sin importar el origen o destino.'
+                      : 'En Punto a Punto, debes definir precios específicos en la pestaña "Tarifas".'}
+                  </Text>
                 </View>
               </View>
-            ))}
+            </ScrollView>
+          )}
 
-            {(form.fares || []).length === 0 && (
-              <Text style={styles.emptyText}>No hay tarifas configuradas para esta ruta.</Text>
-            )}
-          </ScrollView>
-        )}
-      </View>
-    </SafeAreaView>
+          {activeTab === 'STOPS' && (
+            <DraggableFlatList
+              data={form.stops || []}
+              keyExtractor={(item: any) => item.id || item.name}
+              contentContainerStyle={styles.scroll}
+              onDragEnd={({ data }: { data: any[] }) => {
+                const oldIndexToNewIndex = new Map<number, number>();
+                data.forEach((stop: any, newIndex: number) => {
+                  oldIndexToNewIndex.set(stop.order - 1, newIndex);
+                });
+
+                const newStops = data.map((s: any, i: number) => ({ ...s, order: i + 1 }));
+
+                const newFares = (form.fares || []).map(fare => ({
+                  ...fare,
+                  originStopIndex: oldIndexToNewIndex.has(fare.originStopIndex)
+                    ? oldIndexToNewIndex.get(fare.originStopIndex)!
+                    : fare.originStopIndex,
+                  destinationStopIndex: oldIndexToNewIndex.has(fare.destinationStopIndex)
+                    ? oldIndexToNewIndex.get(fare.destinationStopIndex)!
+                    : fare.destinationStopIndex,
+                }));
+
+                setForm({ ...form, stops: newStops, fares: newFares });
+              }}
+              renderItem={({ item, getIndex, drag, isActive }: any) => (
+                <StopItem
+                  stop={item}
+                  index={getIndex()}
+                  drag={drag}
+                  isActive={isActive}
+                  onUpdate={handleUpdateStop}
+                  onRemove={handleRemoveStop}
+                />
+              )}
+              ListHeaderComponent={
+                <View style={[styles.sectionHeader, { marginBottom: 16 }]}>
+                  <Text style={styles.label}>Paradas en Orden</Text>
+                  <TouchableOpacity style={styles.addSmallBtn} onPress={handleAddStop}>
+                    <Plus size={16} color="white" />
+                    <Text style={styles.addSmallBtnText}>Añadir</Text>
+                  </TouchableOpacity>
+                </View>
+              }
+              ListEmptyComponent={
+                <Text style={styles.emptyText}>No hay paradas definidas.</Text>
+              }
+            />
+          )}
+
+          {activeTab === 'FARES' && (
+            <ScrollView contentContainerStyle={styles.scroll}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.label}>Tabla de Tarifas</Text>
+                <TouchableOpacity style={styles.addSmallBtn} onPress={handleAddFare}>
+                  <Plus size={16} color="white" />
+                  <Text style={styles.addSmallBtnText}>Añadir Tarifa</Text>
+                </TouchableOpacity>
+              </View>
+
+              {(form.fares || []).map((fare, index) => (
+                <View key={index} style={styles.fareCard}>
+                  <View style={styles.fareFlow}>
+                    <View style={styles.fareSelector}>
+                      <Text style={styles.fareLabel}>Desde:</Text>
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        <View style={styles.stopPills}>
+                          {form.stops?.map((s, sIdx) => (
+                            <TouchableOpacity
+                              key={sIdx}
+                              style={[styles.stopPill, fare.originStopIndex === sIdx && styles.stopPillActive]}
+                              onPress={() => handleUpdateFare(index, 'originStopIndex', sIdx)}
+                            >
+                              <Text style={[styles.stopPillText, fare.originStopIndex === sIdx && styles.stopPillTextActive]}>
+                                {s.name || `P${sIdx + 1}`}
+                              </Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      </ScrollView>
+                    </View>
+
+                    <View style={styles.fareSelector}>
+                      <Text style={styles.fareLabel}>Hacia:</Text>
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        <View style={styles.stopPills}>
+                          {form.stops?.map((s, sIdx) => (
+                            <TouchableOpacity
+                              key={sIdx}
+                              style={[styles.stopPill, fare.destinationStopIndex === sIdx && styles.stopPillActive]}
+                              onPress={() => handleUpdateFare(index, 'destinationStopIndex', sIdx)}
+                            >
+                              <Text style={[styles.stopPillText, fare.destinationStopIndex === sIdx && styles.stopPillTextActive]}>
+                                {s.name || `P${sIdx + 1}`}
+                              </Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      </ScrollView>
+                    </View>
+
+                    <View style={styles.fareInputRow}>
+                      <DollarSign size={20} color={theme.colors.primary.esmeralda} />
+                      <TextInput
+                        style={[styles.input, { flex: 1, marginBottom: 0 }]}
+                        value={fare.fareAmount.toString()}
+                        onChangeText={(text) => handleUpdateFare(index, 'fareAmount', parseInt(text) || 0)}
+                        keyboardType="numeric"
+                        placeholder="Valor"
+                      />
+                      <TouchableOpacity onPress={() => handleRemoveFare(index)} style={styles.removeBtn}>
+                        <Trash2 size={20} color={theme.colors.semantic.error} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              ))}
+
+              {(form.fares || []).length === 0 && (
+                <Text style={styles.emptyText}>No hay tarifas configuradas para esta ruta.</Text>
+              )}
+            </ScrollView>
+          )}
+        </View>
+      </SafeAreaView>
     </GestureHandlerRootView>
   );
 }

@@ -5,7 +5,7 @@ import { ChevronLeft, Bus, Navigation, Info, Train } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useTransportRoutes } from '../lib/queries';
-import { TransportTypeDto, RouteDto, TransportType } from '@via-libre/shared-types';
+import { TransportTypeDto, RouteDto, TransportType } from '@transix/shared-types';
 import { getRouteDisplayName } from '../lib/utils';
 
 const colors = {

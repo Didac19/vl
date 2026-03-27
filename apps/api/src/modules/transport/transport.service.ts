@@ -8,7 +8,7 @@ import {
   UpdateTransportTypeDto,
   CreateRouteDto,
   UpdateRouteDto
-} from '@via-libre/shared-types';
+} from '@transix/shared-types';
 import { TransportType } from './entities/transport-type.entity';
 import { Route } from './entities/route.entity';
 import { Stop } from './entities/stop.entity';
@@ -206,7 +206,7 @@ export class TransportService {
 
   async findNearbyStations(lat: number, lng: number) {
     const radius = 5; // 5km search radius
-    
+
     // First, find IDs of routes that have at least one stop nearby
     const nearbyRouteIds = await this.stopRepo
       .createQueryBuilder('stop')
@@ -229,10 +229,10 @@ export class TransportService {
     const routes = await this.routeRepo.find({
       where: { id: In(ids) },
       relations: ['stops', 'transportType'],
-      order: { 
-        stops: { 
-          order: 'ASC' 
-        } 
+      order: {
+        stops: {
+          order: 'ASC'
+        }
       }
     });
 

@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import * as Shared from '@via-libre/shared-types';
+import * as Shared from '@transix/shared-types';
 import { CompaniesService } from './companies.service';
 import { ValidatorsService } from './validators.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -16,7 +16,7 @@ export class CompaniesController {
   constructor(
     private readonly companiesService: CompaniesService,
     private readonly validatorsService: ValidatorsService,
-  ) {}
+  ) { }
 
   @Post()
   @Roles(Shared.UserRole.ADMIN)

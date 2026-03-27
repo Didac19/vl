@@ -4,9 +4,9 @@
   "version": "0.1.1",
   "description": "TranSix — Plataforma de Movilidad Colombiana",
   "scripts": {
-    "dev:api": "pnpm --filter @via-libre/api dev",
-    "dev:mobile": "pnpm --filter @via-libre/mobile start",
-    "build:api": "pnpm --filter @via-libre/api build",
+    "dev:api": "pnpm --filter @transix/api dev",
+    "dev:mobile": "pnpm --filter @transix/mobile start",
+    "build:api": "pnpm --filter @transix/api build",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",

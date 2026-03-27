@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { Validator } from './entities/validator.entity';
 import { ScannedTicket } from './entities/scanned-ticket.entity';
 import { Ticket } from '../ticketing/entities/ticket.entity';
-import { CreateValidatorDto, ScanTicketDto } from '@via-libre/shared-types';
+import { CreateValidatorDto, ScanTicketDto } from '@transix/shared-types';
 
 @Injectable()
 export class ValidatorsService {
@@ -15,7 +15,7 @@ export class ValidatorsService {
     private readonly scannedRepo: Repository<ScannedTicket>,
     @InjectRepository(Ticket)
     private readonly ticketRepo: Repository<Ticket>,
-  ) {}
+  ) { }
 
   async create(dto: CreateValidatorDto) {
     const validator = this.validatorRepo.create({

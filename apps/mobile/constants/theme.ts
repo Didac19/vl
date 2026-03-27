@@ -1,3 +1,3 @@
-export * from '@via-libre/ui-tokens';
-import { theme } from '@via-libre/ui-tokens';
+export * from '@transix/ui-tokens';
+import { theme } from '@transix/ui-tokens';
 export { theme };

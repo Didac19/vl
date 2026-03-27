@@ -5,7 +5,7 @@ import { ChevronLeft, Ticket, Bus, ArrowRight, Expand, Info, Train, MapPin } fro
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useRouteFares } from '../lib/queries';
-import { PointToPointFareDto } from '@via-libre/shared-types';
+import { PointToPointFareDto } from '@transix/shared-types';
 
 const colors = {
   // ... existing colors
@@ -34,9 +34,9 @@ const colors = {
 export default function PurchaseTicketScreen() {
   const router = useRouter();
   const { transportId, transportTitle, transportType, baseFare, originStopId, destinationStopId } = useLocalSearchParams();
-  
+
   const { data: fares = [], isLoading: loadingFare } = useRouteFares((transportId as string) || '');
-  
+
   const match = fares.find((f: any) => f.originStopId === originStopId && f.destinationStopId === destinationStopId);
   const calculatedFare = match ? match.fareAmount : (Number(baseFare) || 0);
 

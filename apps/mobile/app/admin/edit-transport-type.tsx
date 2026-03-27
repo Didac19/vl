@@ -5,7 +5,7 @@ import { ChevronLeft, Save } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useTransportRoutes, useCreateTransportType, useUpdateTransportType } from '../../lib/queries';
-import { TransportType, CreateTransportTypeDto } from '@via-libre/shared-types';
+import { TransportType, CreateTransportTypeDto } from '@transix/shared-types';
 import { theme } from '../../constants/theme';
 
 const TRANSPORT_TYPES: { label: string, value: TransportType }[] = [
