@@ -123,7 +123,7 @@ export default function AdminRoutesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.neutral[50],
+    backgroundColor: '#fcf9f5',
   },
   header: {
     flexDirection: 'row',

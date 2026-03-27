@@ -141,7 +141,7 @@ function MenuRow({ icon, label, onPress }: { icon: any, label: string, onPress?:
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.neutral[50],
+    backgroundColor: '#fcf9f5',
   },
   scroll: {
     padding: theme.spacing[4],

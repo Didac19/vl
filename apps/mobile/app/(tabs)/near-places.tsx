@@ -204,7 +204,7 @@ export default function NearPlacesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: '#fcf9f5',
   },
   map: {
     flex: 1,
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'white',
+    backgroundColor: '#fcf9f5',
     justifyContent: 'center',
     alignItems: 'center',
   },

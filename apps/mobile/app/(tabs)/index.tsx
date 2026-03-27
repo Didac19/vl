@@ -269,7 +269,7 @@ export default function DashboardScreen() {
         </View>
 
         {/* Live Map Context Area */}
-        <View style={styles.mapCard}>
+        {/* <View style={styles.mapCard}>
           <ImageBackground
             source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAIaO9XwDIy30lZQzWIOVZa0GBQ_XEvOKiyI18AigYPw5_Hteun5eCotWBOOs0S2EWau1Hs92HKKy6b-flScGatSUsvqtcddWJLbZH9uWvFmkZJrat1D0jq3s48DXlMffDypWsqKQChN2w1bAAHzN8qwZdqEwYAWFcHZW9TzT0tSn-yx-fzCo8ds63orVJFSNd3j3l-Onusb1L7c46DyONGcCjy2OOjHedeW1S_8WUWT2Odpo_X2IdQ4XQAVQ7ffJkeAievFzLd55gn' }}
             style={styles.mapBackground}
@@ -285,7 +285,7 @@ export default function DashboardScreen() {
               </View>
             </View>
           </ImageBackground>
-        </View>
+        </View> */}
 
         <View style={{ height: 100 }} />
       </ScrollView>

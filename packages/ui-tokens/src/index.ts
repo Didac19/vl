@@ -18,6 +18,7 @@ export const colors = {
     cremaDark: '#E8D9B0',
     cieloAndino: '#4A90B8',
     cieloLight: '#EBF4FA',
+    appBackground: '#fcf9f5',
   },
   neutral: {
     900: '#111827',

@@ -108,7 +108,7 @@ const transactions = [
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: '#fcf9f5',
   },
   header: {
     padding: theme.spacing[4],

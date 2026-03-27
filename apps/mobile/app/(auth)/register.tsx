@@ -22,7 +22,7 @@ export default function RegisterScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'white' },
+  container: { flex: 1, backgroundColor: '#fcf9f5' },
   content: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   title: { fontSize: 24, fontWeight: 'bold', color: theme.colors.neutral[900] },
   subtitle: { fontSize: 16, color: theme.colors.neutral[500], marginTop: 10 },
