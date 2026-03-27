@@ -11,92 +11,63 @@ jobs:
 
     defaults:
       run:
-        working-directory: vl/apps/mobile
+        working-directory: apps/mobile
 
     env:
       JAVA_VERSION: 17
 
     steps:
-      # 1. Checkout full monorepo
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # 2. Setup Node (IMPORTANT: root, not app)
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
-          cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            vl/apps/mobile/package-lock.json
+          node-version: 20
+          cache: pnpm
 
-      # 3. Install root deps (if you have them)
-      - name: Install root dependencies
-        run: npm install
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
         working-directory: .
 
-      # 4. Install app deps
-      - name: Install mobile dependencies
-        run: npm install
-
-      # 5. Setup Java
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
 
-      # 6. Setup Android SDK
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      # 7. Cache Gradle
       - name: Cache Gradle
         uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('vl/apps/mobile/android/**/*.gradle*') }}
+          key: gradle-${{ runner.os }}-${{ hashFiles('apps/mobile/android/**/*.gradle*') }}
           restore-keys: |
             gradle-${{ runner.os }}
 
-      # 8. Install Expo CLI
       - name: Install Expo CLI
-        run: npm install -g expo-cli
+        run: pnpm add -g expo-cli
 
-      # 9. Prebuild (monorepo-safe)
       - name: Expo Prebuild
         run: npx expo prebuild --platform android --no-install
 
-      # 10. Fix metro for monorepo (VERY IMPORTANT)
-      - name: Patch metro config
-        run: |
-          if [ ! -f metro.config.js ]; then
-            echo "const { getDefaultConfig } = require('expo/metro-config');
-            const path = require('path');
-            
-            const config = getDefaultConfig(__dirname);
-            config.watchFolders = [path.resolve(__dirname, '../../')];
-            config.resolver.nodeModulesPaths = [
-              path.resolve(__dirname, 'node_modules'),
-              path.resolve(__dirname, '../../node_modules'),
-            ];
-            
-            module.exports = config;" > metro.config.js
-          fi
-
-      # 11. Build APK
       - name: Build APK
         run: |
           cd android
           chmod +x ./gradlew
           ./gradlew assembleRelease
 
-      # 12. Upload APK
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-release-apk
-          path: vl/apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+          path: apps/mobile/android/app/build/outputs/apk/release/app-release.apk
