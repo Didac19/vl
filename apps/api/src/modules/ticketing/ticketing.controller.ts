@@ -9,7 +9,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { IsString, IsOptional, IsNumber } from 'class-validator';
 import { TicketingService } from './ticketing.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -22,6 +22,20 @@ class PurchaseTicketDto {
 
 class ScanTicketDto {
   @IsString() qrToken: string;
+}
+
+class ConfirmBoardingDto {
+  @IsString()
+  @IsOptional()
+  routeId?: string;
+
+  @IsString()
+  @IsOptional()
+  tripId?: string;
+
+  @IsNumber()
+  @IsOptional()
+  amount?: number;
 }
 
 @ApiTags('tickets')
@@ -43,6 +57,22 @@ export class TicketingController {
     return this.ticketingService.getMyTickets(req.user.id);
   }
 
+  @Get('validator-config')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.VALIDATOR, UserRole.COMPANY_ADMIN)
+  @ApiOperation({ summary: 'Obtener configuración para el validador (rutas y Bre-B)' })
+  async getValidatorConfig(@Request() req: any) {
+    // We assume the user has a company_id
+    const user = req.user;
+    // We need to fetch the user with company to get the breBCode
+    // For simplicity, let's just use the service but we might need a UsersService.
+    // Actually, TicketingService can have a method for this or we can inject CompanyRepo.
+    
+    // Let's assume we want to return routes and the Bre-B code of the company.
+    // I will add a method to TicketingService for this.
+    return this.ticketingService.getValidatorConfig(user.id);
+  }
+
   @Post('purchase')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Comprar un pasaje y generar código QR' })
@@ -57,5 +87,19 @@ export class TicketingController {
   @ApiOperation({ summary: 'Validar un pasaje escaneando el código QR' })
   scan(@Body() dto: ScanTicketDto) {
     return this.ticketingService.verifyScan(dto.qrToken);
+  }
+
+  @Post('confirm-boarding')
+  @HttpCode(HttpStatus.CREATED)
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.VALIDATOR, UserRole.COMPANY_ADMIN)
+  @ApiOperation({ summary: 'Registrar abordo confirmado visualmente' })
+  confirmBoarding(@Request() req: any, @Body() dto: ConfirmBoardingDto) {
+    return this.ticketingService.confirmBoarding(
+      req.user.id,
+      dto.routeId,
+      dto.tripId,
+      dto.amount,
+    );
   }
 }

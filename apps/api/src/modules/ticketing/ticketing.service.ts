@@ -4,7 +4,9 @@ import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { SignJWT, jwtVerify, importJWK } from 'jose';
 import { Ticket, TransportType } from './entities/ticket.entity';
+import { BoardingLog } from './entities/boarding-log.entity';
 import { Route } from '../transport/entities/route.entity';
+import { User } from '../users/entities/user.entity';
 import { WalletService } from '../wallet/wallet.service';
 
 // Mock route data — replace with TransportModule integration in Phase 3
@@ -14,7 +16,9 @@ import { WalletService } from '../wallet/wallet.service';
 export class TicketingService {
   constructor(
     @InjectRepository(Ticket) private readonly ticketRepo: Repository<Ticket>,
+    @InjectRepository(BoardingLog) private readonly boardingLogRepo: Repository<BoardingLog>,
     @InjectRepository(Route) private readonly routeRepo: Repository<Route>,
+    @InjectRepository(User) private readonly userRepo: Repository<User>,
     private readonly walletService: WalletService,
     private readonly configService: ConfigService,
   ) {}
@@ -95,6 +99,41 @@ export class TicketingService {
     }));
   }
 
+  async getRoutesByCompany(companyId: string) {
+    const routes = await this.routeRepo.find({
+      where: { company: { id: companyId } },
+      relations: ['transportType'],
+      order: { name: 'ASC' },
+    });
+
+    return routes.map((r) => ({
+      id: r.id,
+      name: r.name,
+      type: r.transportType.type,
+      fareAmount: Number(r.baseFare || r.transportType.fareAmount),
+      fareCents: Math.round(Number(r.baseFare || r.transportType.fareAmount) * 100),
+    }));
+  }
+
+  async getValidatorConfig(userId: string) {
+    const user = await this.userRepo.findOne({
+      where: { id: userId },
+      relations: ['company'],
+    });
+
+    if (!user || !user.company) {
+      throw new BadRequestException('El usuario no está asociado a una empresa de transporte');
+    }
+
+    const routes = await this.getRoutesByCompany(user.company.id);
+
+    return {
+      companyName: user.company.name,
+      breBCode: user.company.breBCode || 'BRE_B_STATIC_CODE_PENDING',
+      routes,
+    };
+  }
+
   async verifyScan(qrToken: string): Promise<{ success: boolean; message: string; ticket?: Ticket }> {
     const secret = new TextEncoder().encode(
       this.configService.get<string>('TICKET_SIGNING_SECRET', 'dev-secret-key-replace-in-prod'),
@@ -140,6 +179,22 @@ export class TicketingService {
       message: `Válido: ${ticket.routeName}`,
       ticket: savedTicket 
     };
+  }
+
+  async confirmBoarding(
+    validatorId: string,
+    routeId?: string,
+    tripId?: string,
+    amount?: number,
+  ): Promise<BoardingLog> {
+    const boardingLog = this.boardingLogRepo.create({
+      validator: { id: validatorId },
+      routeId,
+      tripId,
+      amount,
+    });
+
+    return this.boardingLogRepo.save(boardingLog);
   }
 
   private async signTicketToken(

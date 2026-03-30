@@ -20,6 +20,9 @@ export class Company {
   @Column({ nullable: true })
   phone: string;
 
+  @Column({ name: 'bre_b_code', nullable: true })
+  breBCode: string;
+
   @OneToMany('User', 'company')
   users: User[];
 
