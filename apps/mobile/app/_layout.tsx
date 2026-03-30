@@ -12,6 +12,7 @@ import { useColorScheme } from '../components/useColorScheme';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useThemeStore } from '../store/theme';
+import { UserRole } from '@transix/shared-types';
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,8 @@ export default function RootLayout() {
 
       if (!user) {
         router.replace('/(auth)/login');
+      } else if (user.role === UserRole.VALIDATOR) {
+        router.replace('/validator/scan');
       }
     }
   }, [loaded, isLoading, user]);
@@ -63,6 +66,7 @@ export default function RootLayout() {
               <Stack.Screen name="admin/routes" options={{ headerShown: false }} />
               <Stack.Screen name="admin/edit-route" options={{ headerShown: false }} />
               <Stack.Screen name="admin/edit-transport-type" options={{ headerShown: false }} />
+              <Stack.Screen name="validator/scan" options={{ headerShown: false }} />
               <Stack.Screen name="+not-found" />
             </Stack>
             <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />

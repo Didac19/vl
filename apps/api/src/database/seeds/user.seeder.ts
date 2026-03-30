@@ -58,7 +58,7 @@ export default class UserSeeder implements Seeder {
           fullName: 'Operario Cable Aéreo',
           email: driverEmail,
           password: await bcrypt.hash('driver123', 10),
-          role: UserRole.DRIVER,
+          role: UserRole.VALIDATOR,
           company: cableAereo,
         });
         await userRepo.save(driver);

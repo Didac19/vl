@@ -1,11 +1,17 @@
 import 'reflect-metadata';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
 import { dataSource } from './data-source';
 import { runSeeders } from 'typeorm-extension';
 import AdminSeeder from './seeds/admin.seeder';
 import UserSeeder from './seeds/user.seeder';
 import CompanySeeder from './seeds/company.seeder';
 import TransportSeeder from './seeds/transport.seeder';
+import TicketSeeder from './seeds/ticket.seeder';
 import UserFactory from './factories/user.factory';
+
+// Load .env
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 async function run() {
   try {
@@ -41,6 +47,12 @@ async function run() {
       console.log('4. Transport Seeder');
       const transportSeeder = new TransportSeeder();
       await transportSeeder.run(dataSource);
+    }
+
+    if (runAll || args.includes('ticket')) {
+      console.log('5. Ticket Seeder');
+      const ticketSeeder = new TicketSeeder();
+      await ticketSeeder.run(dataSource);
     }
 
     console.log('✅ Seeding process finished!');

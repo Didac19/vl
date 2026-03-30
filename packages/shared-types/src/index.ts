@@ -21,6 +21,7 @@ export const UserRole = {
   COMPANY_ADMIN: 'COMPANY_ADMIN',
   DRIVER: 'DRIVER',
   USER: 'USER',
+  VALIDATOR: 'VALIDATOR',
 } as const;
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];

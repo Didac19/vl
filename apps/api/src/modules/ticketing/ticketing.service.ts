@@ -1,47 +1,41 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
-import { SignJWT, importPKCS8 } from 'jose';
+import { SignJWT, jwtVerify, importJWK } from 'jose';
 import { Ticket, TransportType } from './entities/ticket.entity';
+import { Route } from '../transport/entities/route.entity';
 import { WalletService } from '../wallet/wallet.service';
 
 // Mock route data — replace with TransportModule integration in Phase 3
-const MOCK_ROUTES: Record<
-  string,
-  { name: string; type: TransportType; fareCents: number }
-> = {
-  'tm-b01': {
-    name: 'TransMilenio B01 - Portal Norte',
-    type: 'TRANSMILENIO',
-    fareCents: 295000,
-  },
-  'sitp-302': { name: 'SITP 302 - Usaquén', type: 'SITP', fareCents: 295000 },
-  'coop-medellin': {
-    name: 'Cooperativa Medellín - Rionegro',
-    type: 'COOPERATIVA',
-    fareCents: 1200000,
-  },
-  'mb-local': { name: 'Microbús Local', type: 'MICROBUS', fareCents: 200000 },
-};
+
 
 @Injectable()
 export class TicketingService {
   constructor(
     @InjectRepository(Ticket) private readonly ticketRepo: Repository<Ticket>,
+    @InjectRepository(Route) private readonly routeRepo: Repository<Route>,
     private readonly walletService: WalletService,
     private readonly configService: ConfigService,
   ) {}
 
   async purchaseTicket(userId: string, routeId: string): Promise<Ticket> {
-    const route = MOCK_ROUTES[routeId];
+    const route = await this.routeRepo.findOne({
+      where: { id: routeId },
+      relations: ['transportType'],
+    });
+
     if (!route)
       throw new BadRequestException(`Ruta '${routeId}' no encontrada`);
+
+    // Use route base fare if present, otherwise transport type fare
+    const fareAmount = route.baseFare > 0 ? route.baseFare : route.transportType.fareAmount;
+    const fareCents = Math.round(Number(fareAmount) * 100);
 
     // Debit wallet first (throws if insufficient balance)
     await this.walletService.debit(
       userId,
-      route.fareCents,
+      fareCents,
       `Pasaje ${route.name}`,
       undefined,
     );
@@ -51,10 +45,10 @@ export class TicketingService {
     const qrToken = await this.signTicketToken(userId, routeId, expiresAt);
 
     const ticket = this.ticketRepo.create({
-      transportType: route.type,
+      transportType: route.transportType.type as any, // Cast to our local enum
       routeId,
       routeName: route.name,
-      fareAmount: route.fareCents,
+      fareAmount: fareCents,
       status: 'ISSUED',
       qrToken,
       expiresAt,
@@ -86,8 +80,66 @@ export class TicketingService {
     });
   }
 
-  getAvailableRoutes() {
-    return Object.entries(MOCK_ROUTES).map(([id, r]) => ({ id, ...r }));
+  async getAvailableRoutes() {
+    const routes = await this.routeRepo.find({
+      relations: ['transportType'],
+      order: { name: 'ASC' },
+    });
+
+    return routes.map((r) => ({
+      id: r.id,
+      name: r.name,
+      type: r.transportType.type,
+      fareAmount: Number(r.baseFare || r.transportType.fareAmount),
+      fareCents: Math.round(Number(r.baseFare || r.transportType.fareAmount) * 100),
+    }));
+  }
+
+  async verifyScan(qrToken: string): Promise<{ success: boolean; message: string; ticket?: Ticket }> {
+    const secret = new TextEncoder().encode(
+      this.configService.get<string>('TICKET_SIGNING_SECRET', 'dev-secret-key-replace-in-prod'),
+    );
+    
+    let payload;
+    try {
+      const { payload: verifiedPayload } = await jwtVerify(qrToken, secret);
+      payload = verifiedPayload;
+    } catch (e) {
+      throw new ForbiddenException('La firma del pasaje no es válida o ha expirado');
+    }
+    
+    const ticket = await this.ticketRepo.findOne({
+      where: { qrToken }, // We still look it up to check status and route
+    });
+
+    if (!ticket) {
+      throw new NotFoundException('Pasaje no encontrado o es falso');
+    }
+
+    if (ticket.status === 'USED') {
+      throw new ForbiddenException('Este pasaje ya fue utilizado');
+    }
+
+    if (ticket.status !== 'ISSUED') {
+      throw new BadRequestException(`El pasaje no tiene un estado válido: ${ticket.status}`);
+    }
+
+    const now = new Date();
+    if (ticket.expiresAt < now) {
+      ticket.status = 'EXPIRED';
+      await this.ticketRepo.save(ticket);
+      throw new ForbiddenException('El pasaje ha expirado');
+    }
+
+    // Mark as USED
+    ticket.status = 'USED';
+    const savedTicket = await this.ticketRepo.save(ticket);
+
+    return { 
+      success: true, 
+      message: `Válido: ${ticket.routeName}`,
+      ticket: savedTicket 
+    };
   }
 
   private async signTicketToken(
@@ -95,20 +147,17 @@ export class TicketingService {
     routeId: string,
     expiresAt: Date,
   ): Promise<string> {
-    const privateKeyPem = this.configService.get<string>(
-      'TICKET_SIGNING_SECRET',
-      'dev-secret-key-replace-in-prod',
+    const secret = new TextEncoder().encode(
+      this.configService.get<string>('TICKET_SIGNING_SECRET', 'dev-secret-key-replace-in-prod'),
     );
 
-    // In dev, use a simple HMAC. In prod, use ED25519 loaded from file.
-    const payload = {
-      sub: userId,
+    return new SignJWT({
+      userId,
       routeId,
-      iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(expiresAt.getTime() / 1000),
-    };
-
-    // Simple base64 token for dev — replace with real ED25519 JWS in production
-    return Buffer.from(JSON.stringify(payload)).toString('base64url');
+    })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime(Math.floor(expiresAt.getTime() / 1000))
+      .sign(secret);
   }
 }

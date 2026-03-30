@@ -8,6 +8,7 @@ import { useThemeStore, ThemeMode } from '../../store/theme';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from '@/components/useColorScheme';
+import { UserRole } from '@transix/shared-types';
 import Colors from '@/constants/Colors';
 
 export default function ProfileScreen() {
@@ -17,9 +18,11 @@ export default function ProfileScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme];
   
-  const isAdmin = user?.role === 'ADMIN';
-  const isCompanyAdmin = user?.role === 'COMPANY_ADMIN';
+  const isAdmin = user?.role === UserRole.ADMIN;
+  const isCompanyAdmin = user?.role === UserRole.COMPANY_ADMIN;
+  const isValidator = user?.role === UserRole.VALIDATOR;
   const hasAdminAccess = isAdmin || isCompanyAdmin;
+  const canScan = isAdmin || isValidator || isCompanyAdmin;
 
   const handleLogout = async () => {
     Alert.alert(
@@ -61,13 +64,32 @@ export default function ProfileScreen() {
             <Text style={[styles.userName, { color: colors.text }]}>{user?.fullName || 'Usuario'}</Text>
             <Text style={[styles.userEmail, { color: colors.onSurfaceVariant }]}>{user?.email || 'email@ejemplo.com'}</Text>
             <View style={styles.levelBadge}>
-              <Text style={styles.levelText}>{user?.role === 'ADMIN' ? 'Super Administrador' : user?.role === 'COMPANY_ADMIN' ? 'Admin de Compañía' : 'Viajero Esmeralda'}</Text>
+              <Text style={styles.levelText}>
+                {user?.role === UserRole.ADMIN ? 'Super Administrador' : 
+                 user?.role === UserRole.COMPANY_ADMIN ? 'Admin de Compañía' : 
+                 user?.role === UserRole.VALIDATOR ? 'Validador' : 
+                 'Viajero Esmeralda'}
+              </Text>
             </View>
           </View>
           <TouchableOpacity style={styles.editBtn} onPress={() => router.push('/edit-profile')}>
             <Settings size={20} color={colors.onSurfaceVariant} />
           </TouchableOpacity>
         </View>
+
+        {canScan && (
+          <>
+            <Text style={[styles.sectionTitle, { color: colors.onSurfaceVariant }]}>Operaciones de Validación</Text>
+            <View style={[styles.menu, { backgroundColor: colors.surface }]}>
+              <MenuRow
+                icon={<Bell size={20} color={colors.primary} />}
+                label="Escanear Pasaje (QR)"
+                onPress={() => router.push('/validator/scan')}
+                colors={colors}
+              />
+            </View>
+          </>
+        )}
 
         {hasAdminAccess && (
           <>

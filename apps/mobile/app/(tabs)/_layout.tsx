@@ -5,10 +5,22 @@ import { theme } from '../../constants/theme';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
+import { useAuthStore } from '@/store/auth';
+import { UserRole } from '@transix/shared-types';
+import { useEffect } from 'react';
+import { useRouter } from 'expo-router';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme];
+  const { user } = useAuthStore();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user?.role === UserRole.VALIDATOR) {
+      router.replace('/validator/scan');
+    }
+  }, [user]);
 
   return (
     <Tabs

@@ -11,6 +11,10 @@ import { User } from '../../users/entities/user.entity';
 
 export type TicketStatus = 'ISSUED' | 'USED' | 'EXPIRED' | 'CANCELLED';
 export type TransportType =
+  | 'CABLE_AEREO'
+  | 'BUS_URBANO'
+  | 'BUSETA'
+  | 'INTERMUNICIPAL'
   | 'TRANSMILENIO'
   | 'SITP'
   | 'COOPERATIVA'
@@ -24,7 +28,16 @@ export class Ticket {
   @Column({
     name: 'transport_type',
     type: 'enum',
-    enum: ['TRANSMILENIO', 'SITP', 'COOPERATIVA', 'MICROBUS'],
+    enum: [
+      'CABLE_AEREO',
+      'BUS_URBANO',
+      'BUSETA',
+      'INTERMUNICIPAL',
+      'TRANSMILENIO',
+      'SITP',
+      'COOPERATIVA',
+      'MICROBUS',
+    ],
   })
   transportType: TransportType;
 

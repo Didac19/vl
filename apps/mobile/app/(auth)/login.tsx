@@ -18,6 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLogin } from '@/lib/queries';
 import { useAuthStore } from '@/store/auth';
 import { StatusBar } from 'expo-status-bar';
+import { UserRole } from '@transix/shared-types';
 
 const { width, height } = Dimensions.get('window');
 
@@ -58,7 +59,12 @@ export default function LoginScreen() {
       // Then fetch the full profile from /users/me to ensure complete data
       await fetchProfile();
 
-      router.replace('/(tabs)');
+      const userNow = useAuthStore.getState().user;
+      if (userNow?.role === UserRole.VALIDATOR) {
+        router.replace('/validator/scan');
+      } else {
+        router.replace('/(tabs)');
+      }
     } catch (error: any) {
       console.error(error);
       const message = error.response?.data?.message || 'Error al iniciar sesión';

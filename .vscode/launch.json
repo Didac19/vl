@@ -1,0 +1,50 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug API (NestJS)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/apps/api",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "run",
+        "start:debug"
+      ],
+      "console": "integratedTerminal",
+      "restart": true,
+      "env": {
+        "NODE_ENV": "development"
+      }
+    },
+    {
+      "name": "Debug Mobile (Expo)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/apps/mobile",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "run",
+        "start"
+      ],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Attach to API",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "restart": true,
+      "cwd": "${workspaceFolder}/apps/api"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug All (API + Mobile)",
+      "configurations": [
+        "Debug API (NestJS)",
+        "Debug Mobile (Expo)"
+      ]
+    }
+  ]
+}

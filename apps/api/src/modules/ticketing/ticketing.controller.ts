@@ -5,14 +5,23 @@ import {
   Body,
   UseGuards,
   Request,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { IsString } from 'class-validator';
 import { TicketingService } from './ticketing.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '@transix/shared-types';
 
 class PurchaseTicketDto {
   @IsString() routeId: string;
+}
+
+class ScanTicketDto {
+  @IsString() qrToken: string;
 }
 
 @ApiTags('tickets')
@@ -35,8 +44,18 @@ export class TicketingController {
   }
 
   @Post('purchase')
+  @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Comprar un pasaje y generar código QR' })
   purchase(@Request() req: any, @Body() dto: PurchaseTicketDto) {
     return this.ticketingService.purchaseTicket(req.user.id, dto.routeId);
+  }
+
+  @Post('scan')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.VALIDATOR, UserRole.COMPANY_ADMIN)
+  @ApiOperation({ summary: 'Validar un pasaje escaneando el código QR' })
+  scan(@Body() dto: ScanTicketDto) {
+    return this.ticketingService.verifyScan(dto.qrToken);
   }
 }
