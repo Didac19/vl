@@ -1,38 +1,32 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import React from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Ticket, Bus, ArrowRight, Expand, Info, Train, MapPin } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useRouteFares } from '../lib/queries';
-import { PointToPointFareDto } from '@transix/shared-types';
+import { theme as uiTheme } from '../constants/theme';
+import { useColorScheme } from '../components/useColorScheme';
+import Colors from '../constants/Colors';
 
-const colors = {
-  // ... existing colors
-  background: "#fcf9f5",
-  onBackground: "#1c1c1a",
-  surface: "#fcf9f5",
-  onSurface: "#1c1c1a",
-  onSurfaceVariant: "#3e4a3f",
-  primary: "#006a37",
-  onPrimary: "#ffffff",
-  primaryContainer: "#008647",
-  onPrimaryContainer: "#f6fff4",
-  secondary: "#9e4127",
-  onSecondary: "#ffffff",
-  tertiary: "#705740",
-  onTertiary: "#ffffff",
-  tertiaryFixedDim: "#e1c1a4",
-  onTertiaryFixedVariant: "#59422c",
-  surfaceContainerLow: "#f6f3ef",
-  surfaceContainerLowest: "#ffffff",
-  surfaceContainerHigh: "#ebe8e4",
-  surfaceContainerHighest: "#e5e2de",
-  outlineVariant: "#bdcabc",
+// Local color constants for specific transport branding
+const getTransportBranding = (type: string, isDark: boolean) => {
+  const base = {
+    CABLE_AEREO: isDark ? '#E68A75' : '#9e4127',
+    BUS_URBANO: isDark ? '#4DB87A' : '#006a37',
+    BUSETA: isDark ? '#9E8975' : '#705740',
+  };
+  return base[type as keyof typeof base] || (isDark ? '#4DB87A' : '#006a37');
 };
+
 
 export default function PurchaseTicketScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const colors = Colors[colorScheme];
+  const styles = makeStyles(colors, isDark);
+
   const { transportId, transportTitle, transportType, baseFare, originStopId, destinationStopId } = useLocalSearchParams();
 
   const { data: fares = [], isLoading: loadingFare } = useRouteFares((transportId as string) || '');
@@ -40,34 +34,36 @@ export default function PurchaseTicketScreen() {
   const match = fares.find((f: any) => f.originStopId === originStopId && f.destinationStopId === destinationStopId);
   const calculatedFare = match ? match.fareAmount : (Number(baseFare) || 0);
 
+
   const getTransportConfig = () => {
     const formattedFare = `$${calculatedFare.toLocaleString()}`;
+    const brandingColor = getTransportBranding(transportType as string, isDark);
 
     switch (transportType) {
       case 'CABLE_AEREO':
         return {
           subtitle: 'Viaja por el cielo de Manizales conectando el centro con Villamaría de forma ecológica.',
-          mainTicket: { title: 'Pasaje Único', price: formattedFare, icon: <Train size={32} color={colors.secondary} /> },
+          mainTicket: { title: 'Pasaje Único', price: formattedFare, icon: <Train size={32} color={brandingColor} /> },
           options: [
-            { title: 'Estudiantil', price: '$1.800', info: 'Con carné vigente', icon: <ArrowRight size={20} color={colors.tertiary} /> },
+            { title: 'Estudiantil', price: '$1.800', info: 'Con carné vigente', icon: <ArrowRight size={20} color={colors.secondary} /> },
             { title: 'Adulto Mayor', price: '$2.000', info: 'Mayores de 65', icon: <Expand size={20} color={colors.primary} /> }
           ]
         };
       case 'BUS_URBANO':
         return {
           subtitle: 'Servicio de buses por las avenidas principales: Santander, Paralela y Kevin Ángel.',
-          mainTicket: { title: 'Pasaje Urbano', price: formattedFare, icon: <Bus size={32} color={colors.primary} /> },
+          mainTicket: { title: 'Pasaje Urbano', price: formattedFare, icon: <Bus size={32} color={brandingColor} /> },
           options: [
-            { title: 'Ruta Circular', price: formattedFare, info: 'Todo el día', icon: <ArrowRight size={20} color={colors.tertiary} /> },
-            { title: 'Transbordo', price: '$500', info: 'Entre rutas urbanas', icon: <Expand size={20} color={colors.secondary} /> }
+            { title: 'Ruta Circular', price: formattedFare, info: 'Todo el día', icon: <ArrowRight size={20} color={colors.secondary} /> },
+            { title: 'Transbordo', price: '$500', info: 'Entre rutas urbanas', icon: <Expand size={20} color={brandingColor} /> }
           ]
         };
       case 'BUSETA':
         return {
           subtitle: 'Transporte rápido y flexible que llega a todos los barrios de la ciudad.',
-          mainTicket: { title: 'Pasaje Buseta', price: formattedFare, icon: <Bus size={32} color={colors.tertiary} /> },
+          mainTicket: { title: 'Pasaje Buseta', price: formattedFare, icon: <Bus size={32} color={brandingColor} /> },
           options: [
-            { title: 'Colectivo', price: '$2.800', info: 'Servicio expreso', icon: <ArrowRight size={20} color={colors.secondary} /> },
+            { title: 'Colectivo', price: '$2.800', info: 'Servicio expreso', icon: <ArrowRight size={20} color={brandingColor} /> },
             { title: 'Nocturno', price: '$3.000', info: 'Después de las 10 PM', icon: <Expand size={20} color={colors.primary} /> }
           ]
         };
@@ -75,10 +71,10 @@ export default function PurchaseTicketScreen() {
       default:
         return {
           subtitle: 'Conexión desde la terminal de transportes hacia municipios cercanos.',
-          mainTicket: { title: transportTitle || 'Pasaje', price: formattedFare, icon: <Bus size={32} color={colors.onSurfaceVariant} /> },
+          mainTicket: { title: (transportTitle as string) || 'Pasaje', price: formattedFare, icon: <Bus size={32} color={colors.onSurfaceVariant} /> },
           options: [
-            { title: 'Villamaría', price: '$2.500', icon: <ArrowRight size={20} color={colors.tertiary} /> },
-            { title: 'Chinchiná', price: '$4.500', info: 'Frecuencia 15 min', icon: <Expand size={20} color={colors.secondary} /> }
+            { title: 'Villamaría', price: '$2.500', icon: <ArrowRight size={20} color={colors.secondary} /> },
+            { title: 'Chinchiná', price: '$4.500', info: 'Frecuencia 15 min', icon: <Expand size={20} color={brandingColor} /> }
           ]
         };
     }
@@ -88,8 +84,7 @@ export default function PurchaseTicketScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="light" />
-      {/* TopAppBar */}
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <View style={styles.topBar}>
         <View style={styles.topBarLeft}>
           <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
@@ -109,55 +104,61 @@ export default function PurchaseTicketScreen() {
         <View style={styles.headerSection}>
           <View style={styles.moduleBadge}>
             <Ticket size={14} color={colors.secondary} fill={colors.secondary} />
-            <Text style={styles.moduleBadgeText}>MÓDULO DE COMPRA</Text>
+            <Text style={[styles.moduleBadgeText, { color: colors.secondary }]}>MÓDULO DE COMPRA</Text>
           </View>
-          <Text style={styles.title}>Compra Pasaje: {transportTitle || 'SITP'}</Text>
-          <Text style={styles.subtitle}>{config.subtitle}</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Compra Pasaje: {transportTitle || 'SITP'}</Text>
+          <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>{config.subtitle}</Text>
         </View>
+
 
         {/* Route Details (if P2P) */}
         {originStopId && destinationStopId && (
-          <View style={styles.routeDetails}>
+          <View style={[styles.routeDetails, { backgroundColor: colors.surfaceVariant, borderColor: colors.outline + '20' }]}>
             <View style={styles.routeDetailItem}>
               <MapPin size={16} color={colors.primary} />
-              <Text style={styles.routeDetailText}>Origen seleccionado</Text>
+              <Text style={[styles.routeDetailText, { color: colors.text }]}>Origen seleccionado</Text>
             </View>
-            <View style={styles.routeConnector} />
+            <View style={[styles.routeConnector, { backgroundColor: colors.outline + '40' }]} />
             <View style={styles.routeDetailItem}>
               <MapPin size={16} color={colors.secondary} />
-              <Text style={styles.routeDetailText}>Destino seleccionado</Text>
+              <Text style={[styles.routeDetailText, { color: colors.text }]}>Destino seleccionado</Text>
             </View>
           </View>
         )}
 
+
         {/* Ticket Options Grid */}
         <View style={styles.grid}>
-          {/* Main Option */}
-          <TouchableOpacity style={styles.mainCard} activeOpacity={0.9} disabled={loadingFare}>
+          <TouchableOpacity 
+            style={styles.mainCard} 
+            activeOpacity={0.9} 
+            disabled={loadingFare}
+          >
             <View style={styles.cardHeader}>
-              <View style={styles.iconContainer}>
+              <View style={[styles.iconContainer, { backgroundColor: colors.primary + '15' }]}>
                 {config.mainTicket.icon}
               </View>
-              <View style={styles.popularBadge}>
+              <View style={[styles.popularBadge, { backgroundColor: colors.primary }]}>
                 <Text style={styles.popularBadgeText}>MÁS POPULAR</Text>
               </View>
             </View>
             <View>
-              <Text style={styles.cardTitle}>{config.mainTicket.title}</Text>
+              <Text style={[styles.cardTitle, { color: colors.text }]}>{config.mainTicket.title}</Text>
               {loadingFare ? (
                 <ActivityIndicator size="small" color={colors.primary} style={{ alignSelf: 'flex-start', marginTop: 10 }} />
               ) : (
                 <View style={styles.priceContainer}>
-                  <Text style={styles.priceValue}>{config.mainTicket.price}</Text>
-                  <Text style={styles.priceCurrency}>COP</Text>
+                  <Text style={[styles.priceValue, { color: colors.primary }]}>{config.mainTicket.price}</Text>
+                  <Text style={[styles.priceCurrency, { color: colors.onSurfaceVariant }]}>COP</Text>
                 </View>
               )}
             </View>
             <View style={styles.buyNow}>
-              <Text style={styles.buyNowText}>Comprar ahora</Text>
+              <Text style={[styles.buyNowText, { color: colors.primary }]}>Comprar ahora</Text>
               <ArrowRight size={14} color={colors.primary} />
             </View>
           </TouchableOpacity>
+
 
           <View style={styles.smallCardsRow}>
             {/* Small Options */}
@@ -166,25 +167,27 @@ export default function PurchaseTicketScreen() {
                 key={index}
                 style={[
                   styles.smallCard,
-                  index === 0 ? { backgroundColor: colors.surfaceContainerHigh } : { backgroundColor: 'rgba(158, 65, 39, 0.05)', borderColor: 'rgba(158, 65, 39, 0.1)', borderWidth: 1 }
+                  { backgroundColor: colors.surfaceVariant },
+                  index === 1 && { backgroundColor: colors.secondary + '10', borderColor: colors.secondary + '30', borderWidth: 1 }
                 ]}
                 activeOpacity={0.8}
               >
                 <View style={styles.smallCardIcon}>
                   {option.icon}
                 </View>
-                <Text style={styles.smallCardTitle}>{option.title}</Text>
-                <Text style={[styles.smallCardPrice, index === 1 && { color: colors.secondary }]}>{option.price}</Text>
-                {option.info && <Text style={styles.smallCardInfo}>{option.info}</Text>}
+                <Text style={[styles.smallCardTitle, { color: colors.text }]}>{option.title}</Text>
+                <Text style={[styles.smallCardPrice, { color: colors.secondary }]}>{option.price}</Text>
+                {option.info && <Text style={[styles.smallCardInfo, { color: colors.onSurfaceVariant }]}>{option.info}</Text>}
               </TouchableOpacity>
             ))}
+
           </View>
         </View>
 
         {/* Payment Method */}
         <View style={styles.paymentSection}>
-          <Text style={styles.sectionTitle}>Método de Pago</Text>
-          <View style={styles.paymentCard}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Método de Pago</Text>
+          <View style={[styles.paymentCard, { backgroundColor: colors.surfaceVariant, borderColor: colors.outline + '20' }]}>
             <View style={styles.paymentInfo}>
               <View style={styles.cardVisual}>
                 <View style={styles.cardGradient}>
@@ -192,21 +195,23 @@ export default function PurchaseTicketScreen() {
                 </View>
               </View>
               <View>
-                <Text style={styles.paymentName}>Tu Llave Plus</Text>
-                <Text style={styles.paymentDetail}>Termina en •••• 4291</Text>
+                <Text style={[styles.paymentName, { color: colors.text }]}>Tu Llave Plus</Text>
+                <Text style={[styles.paymentDetail, { color: colors.onSurfaceVariant }]}>Termina en •••• 4291</Text>
               </View>
             </View>
             <Expand size={20} color={colors.onSurfaceVariant} />
           </View>
         </View>
 
+
         {/* Info Card */}
-        <View style={styles.infoCard}>
-          <Info size={20} color={colors.tertiary} />
-          <Text style={styles.infoText}>
+        <View style={[styles.infoCard, { backgroundColor: colors.secondary + '15' }]}>
+          <Info size={20} color={colors.secondary} />
+          <Text style={[styles.infoText, { color: colors.onSurfaceVariant }]}>
             Recuerda que tienes hasta 110 minutos para realizar trasbordos entre buses zonales y troncales sin costo adicional o con un valor mínimo.
           </Text>
         </View>
+
 
         <View style={{ height: 120 }} />
       </ScrollView>
@@ -214,7 +219,7 @@ export default function PurchaseTicketScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -225,8 +230,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingVertical: 16,
-    backgroundColor: 'rgba(6, 78, 59, 0.9)', // emerald-900/90
     height: 72,
+    backgroundColor: isDark ? colors.surface : '#064E3B',
   },
   topBarLeft: {
     flexDirection: 'row',
@@ -247,9 +252,8 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(6, 95, 70, 0.3)', // emerald-800/30
     borderWidth: 1,
-    borderColor: 'rgba(4, 120, 87, 0.5)', // emerald-700/50
+    borderColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -278,28 +282,28 @@ const styles = StyleSheet.create({
   moduleBadgeText: {
     fontSize: 10,
     fontWeight: '700',
+    letterSpacing: 1.2,
     color: colors.secondary,
-    letterSpacing: 1,
   },
   title: {
     fontSize: 28,
     fontWeight: '800',
-    color: colors.onBackground,
     lineHeight: 34,
+    color: colors.text,
   },
   subtitle: {
     fontSize: 14,
-    color: colors.onSurfaceVariant,
     marginTop: 8,
     lineHeight: 20,
+    color: colors.onSurfaceVariant,
   },
   routeDetails: {
-    backgroundColor: colors.surfaceContainerLow,
     padding: 16,
     borderRadius: 20,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: colors.surfaceVariant,
+    borderColor: colors.outlineVariant,
   },
   routeDetailItem: {
     flexDirection: 'row',
@@ -308,30 +312,36 @@ const styles = StyleSheet.create({
   },
   routeDetailText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: colors.onSurface,
+    fontWeight: '700',
+    color: colors.text,
   },
   routeConnector: {
     width: 2,
     height: 12,
-    backgroundColor: 'rgba(0,0,0,0.1)',
     marginLeft: 7,
     marginVertical: 4,
+    backgroundColor: colors.outlineVariant,
   },
   grid: {
     gap: 16,
   },
   mainCard: {
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: colors.surface,
     borderRadius: 32,
     padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(110, 122, 110, 0.1)',
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    elevation: 2,
+    borderColor: colors.outlineVariant,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: isDark ? 0.2 : 0.05,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 3,
+      }
+    })
   },
   cardHeader: {
     flexDirection: 'row',
@@ -340,15 +350,15 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   iconContainer: {
-    backgroundColor: 'rgba(0, 106, 55, 0.1)',
     padding: 12,
     borderRadius: 20,
+    backgroundColor: colors.primary + '15',
   },
   popularBadge: {
-    backgroundColor: colors.primary,
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 99,
+    backgroundColor: colors.primary,
   },
   popularBadgeText: {
     color: 'white',
@@ -359,7 +369,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.onSurface,
+    color: colors.text,
   },
   priceContainer: {
     flexDirection: 'row',
@@ -385,7 +395,7 @@ const styles = StyleSheet.create({
   },
   buyNowText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
     color: colors.primary,
   },
   smallCardsRow: {
@@ -398,6 +408,7 @@ const styles = StyleSheet.create({
     padding: 20,
     justifyContent: 'space-between',
     minHeight: 160,
+    backgroundColor: colors.surfaceVariant,
   },
   smallCardIcon: {
     marginBottom: 12,
@@ -405,18 +416,18 @@ const styles = StyleSheet.create({
   smallCardTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: colors.onSurface,
+    color: colors.text,
   },
   smallCardPrice: {
     fontSize: 20,
     fontWeight: '900',
-    color: colors.tertiary,
     marginTop: 4,
+    color: colors.secondary,
   },
   smallCardInfo: {
     fontSize: 10,
     fontWeight: '700',
-    color: 'rgba(112, 87, 64, 0.6)',
+    color: colors.onSurfaceVariant,
     textTransform: 'uppercase',
     letterSpacing: -0.5,
   },
@@ -426,18 +437,18 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.onSurface,
     marginBottom: 16,
+    color: colors.text,
   },
   paymentCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: colors.surfaceContainerLow,
     padding: 16,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(110, 122, 110, 0.2)',
+    backgroundColor: colors.surfaceVariant,
+    borderColor: colors.outlineVariant,
   },
   paymentInfo: {
     flexDirection: 'row',
@@ -466,7 +477,7 @@ const styles = StyleSheet.create({
   paymentName: {
     fontSize: 14,
     fontWeight: '700',
-    color: colors.onSurface,
+    color: colors.text,
   },
   paymentDetail: {
     fontSize: 12,
@@ -477,13 +488,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 16,
     padding: 16,
-    backgroundColor: 'rgba(225, 193, 164, 0.2)',
     borderRadius: 16,
+    backgroundColor: colors.secondary + '15',
   },
   infoText: {
     flex: 1,
     fontSize: 12,
-    color: colors.onTertiaryFixedVariant,
     lineHeight: 18,
+    color: colors.onSurfaceVariant,
   },
 });

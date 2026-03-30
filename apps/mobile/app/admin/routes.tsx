@@ -8,6 +8,8 @@ import { useTransportRoutes, useDeleteRoute } from '../../lib/queries';
 import { useAuthStore } from '../../store/auth';
 import { TransportTypeDto, RouteDto, UserRole } from '@transix/shared-types';
 import { theme } from '../../constants/theme';
+import { useColorScheme } from '../../components/useColorScheme';
+import Colors from '../../constants/Colors';
 
 export default function AdminRoutesScreen() {
   const router = useRouter();
@@ -40,40 +42,44 @@ export default function AdminRoutesScreen() {
     );
   };
 
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme];
+  const shadows = theme.shadows[colorScheme];
+
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+      <View style={[styles.header, { backgroundColor: colors.surface }, shadows.sm]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <ChevronLeft size={28} color={theme.colors.neutral[900]} />
+          <ChevronLeft size={28} color={colors.text} />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
-          <Text style={styles.title}>Rutas</Text>
-          <Text style={styles.subtitle}>{typeName}</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Rutas</Text>
+          <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>{typeName}</Text>
         </View>
         <TouchableOpacity
-          style={styles.addButton}
+          style={[styles.addButton, { backgroundColor: colors.primary }]}
           onPress={() => router.push({ pathname: '/admin/edit-route', params: { typeId } })}
         >
-          <Plus size={24} color="white" />
+          <Plus size={24} color={colors.onPrimary} />
         </TouchableOpacity>
       </View>
 
       {loading ? (
         <View style={styles.loading}>
-          <ActivityIndicator size="large" color={theme.colors.primary.esmeralda} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.scroll}>
           {routes.map((route) => (
             <TouchableOpacity
               key={route.id}
-              style={styles.card}
+              style={[styles.card, { backgroundColor: colors.surface }, shadows.sm]}
               onPress={() => router.push({ pathname: '/admin/edit-route', params: { id: route.id, typeId } })}
             >
               <View style={styles.cardContent}>
                 <View style={styles.routeHeader}>
-                  <Text style={styles.cardTitle}>{route.name}</Text>
+                  <Text style={[styles.cardTitle, { color: colors.text }]}>{route.name}</Text>
                   <View style={[styles.badge, { backgroundColor: route.pricingStrategy === 'FLAT' ? theme.colors.primary.esmeraldaPale : theme.colors.primary.esmeraldaMid }]}>
                     <Text style={[styles.badgeText, { color: theme.colors.primary.esmeraldaDeep }]}>
                       {route.pricingStrategy === 'FLAT' ? 'TARIFA FIJA' : 'PUNTO A PUNTO'}
@@ -83,12 +89,12 @@ export default function AdminRoutesScreen() {
 
                 <View style={styles.routeStats}>
                   <View style={styles.statItem}>
-                    <MapPin size={16} color={theme.colors.neutral[500]} />
-                    <Text style={styles.statText}>{route.stops.length} Paradas</Text>
+                    <MapPin size={16} color={colors.onSurfaceVariant} />
+                    <Text style={[styles.statText, { color: colors.onSurfaceVariant }]}>{route.stops.length} Paradas</Text>
                   </View>
                   <View style={styles.statItem}>
-                    <DollarSign size={16} color={theme.colors.neutral[500]} />
-                    <Text style={styles.statText}>${route.baseFare.toLocaleString()}</Text>
+                    <DollarSign size={16} color={colors.onSurfaceVariant} />
+                    <Text style={[styles.statText, { color: colors.onSurfaceVariant }]}>${route.baseFare.toLocaleString()}</Text>
                   </View>
                 </View>
               </View>
@@ -97,13 +103,13 @@ export default function AdminRoutesScreen() {
                   onPress={() => router.push({ pathname: '/admin/edit-route', params: { id: route.id, typeId } })}
                   style={styles.actionBtn}
                 >
-                  <Edit2 size={20} color={theme.colors.neutral[500]} />
+                  <Edit2 size={20} color={colors.onSurfaceVariant} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => handleDelete(route.id, route.name)}
                   style={styles.actionBtn}
                 >
-                  <Trash2 size={20} color={theme.colors.semantic.error} />
+                  <Trash2 size={20} color={colors.error} />
                 </TouchableOpacity>
               </View>
             </TouchableOpacity>
@@ -111,7 +117,7 @@ export default function AdminRoutesScreen() {
 
           {routes.length === 0 && (
             <View style={styles.empty}>
-              <Text style={styles.emptyText}>No hay rutas configuradas para este tipo.</Text>
+              <Text style={[styles.emptyText, { color: colors.onSurfaceVariant }]}>No hay rutas configuradas para este tipo.</Text>
             </View>
           )}
         </ScrollView>
@@ -123,15 +129,13 @@ export default function AdminRoutesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fcf9f5',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 16,
-    backgroundColor: 'white',
-    ...theme.shadows.sm,
+    height: 72,
   },
   backButton: {
     padding: 4,
@@ -168,13 +172,11 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   card: {
-    backgroundColor: 'white',
     borderRadius: 16,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    ...theme.shadows.sm,
   },
   cardContent: {
     flex: 1,

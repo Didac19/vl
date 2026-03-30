@@ -8,8 +8,10 @@ import 'react-native-reanimated';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { theme } from '../constants/theme';
 import { useAuthStore } from '../store/auth';
+import { useColorScheme } from '../components/useColorScheme';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useThemeStore } from '../store/theme';
 
 const queryClient = new QueryClient();
 
@@ -24,6 +26,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     checkAuth();
+    useThemeStore.getState().loadThemeMode();
   }, [checkAuth]);
 
   useEffect(() => {
@@ -36,6 +39,8 @@ export default function RootLayout() {
     }
   }, [loaded, isLoading, user]);
 
+  const colorScheme = useColorScheme();
+
   if (!loaded || isLoading) {
     return null;
   }
@@ -44,7 +49,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <SafeAreaProvider>
-          <ThemeProvider value={DefaultTheme}>
+          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
             <Stack>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="(auth)/login" options={{ headerShown: false, animation: 'fade' }} />
@@ -60,10 +65,11 @@ export default function RootLayout() {
               <Stack.Screen name="admin/edit-transport-type" options={{ headerShown: false }} />
               <Stack.Screen name="+not-found" />
             </Stack>
-            <StatusBar style="dark" />
+            <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
           </ThemeProvider>
         </SafeAreaProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>
   );
 }
+

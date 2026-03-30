@@ -45,10 +45,63 @@ export const colors = {
   },
   // Transport type colors
   transport: {
-    transmilenio: '#C0392B',  // rojo icónico TM
-    sitp: '#2980B9',          // azul SITP
-    cooperativa: '#F39C12',   // naranja cooperativas
-    microbus: '#8E44AD',      // morado microbuses
+    transmilenio: '#C0392B',
+    sitp: '#2980B9',
+    cooperativa: '#F39C12',
+    microbus: '#8E44AD',
+  },
+  // Functional sets for themes
+  light: {
+    background: '#fcf9f5',
+    surface: '#FFFFFF',
+    surfaceVariant: '#F3F4F6',
+    onSurface: '#111827',
+    onSurfaceVariant: '#4B5563',
+    primary: '#008F4C',
+    onPrimary: '#FFFFFF',
+    primaryContainer: '#CCE9DA',
+    onPrimaryContainer: '#004D28',
+    secondary: '#C0614A',
+    onSecondary: '#FFFFFF',
+    secondaryContainer: '#ff8b6b',
+    onSecondaryContainer: '#75230b',
+    tertiary: '#705740',
+    onTertiary: '#ffffff',
+    tertiaryContainer: '#8a7057',
+    onTertiaryContainer: '#fffbff',
+    tertiaryFixed: '#fedcbe',
+    onTertiaryFixedVariant: '#59422c',
+    surfaceContainerLow: '#f6f3ef',
+    surfaceContainerLowest: '#ffffff',
+    surfaceContainerHighest: '#e5e2de',
+    outline: '#D1D5DB',
+    outlineVariant: '#bdcabc',
+  },
+  dark: {
+    background: '#0F1210',
+    surface: '#1A1D1B',
+    surfaceVariant: '#252926',
+    onSurface: '#F1F5F1',
+    onSurfaceVariant: '#A1A9A2',
+    primary: '#4DB87A',
+    onPrimary: '#00391C',
+    primaryContainer: '#00522D',
+    onPrimaryContainer: '#6EF5A4',
+    secondary: '#E68A75',
+    onSecondary: '#4D2218',
+    secondaryContainer: '#75230b',
+    onSecondaryContainer: '#ff8b6b',
+    tertiary: '#9E8975',
+    onTertiary: '#2B2118',
+    tertiaryContainer: '#59422C',
+    onTertiaryContainer: '#FEDCBE',
+    tertiaryFixed: '#FEDCBE',
+    onTertiaryFixedVariant: '#59422C',
+    surfaceContainerLow: '#151816',
+    surfaceContainerLowest: '#0A0C0B',
+    surfaceContainerHighest: '#2A2E2B',
+    outline: '#3F4941',
+    outlineVariant: '#4B554D',
   },
 } as const;
 
@@ -109,26 +162,51 @@ export const borderRadius = {
 } as const;
 
 export const shadows = {
-  sm: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
+  light: {
+    sm: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      elevation: 1,
+    },
+    md: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 12,
+      elevation: 3,
+    },
+    lg: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.12,
+      shadowRadius: 20,
+      elevation: 6,
+    },
   },
-  md: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
-  },
-  lg: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
-    elevation: 6,
+  dark: {
+    sm: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.3,
+      shadowRadius: 4,
+      elevation: 1,
+    },
+    md: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.4,
+      shadowRadius: 12,
+      elevation: 3,
+    },
+    lg: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.5,
+      shadowRadius: 20,
+      elevation: 6,
+    },
   },
   // Colored shadow for the primary CTA button
   esmeralda: {
@@ -149,3 +227,4 @@ export const theme = {
 } as const;
 
 export type Theme = typeof theme;
+

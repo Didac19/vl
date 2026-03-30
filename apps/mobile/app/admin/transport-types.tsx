@@ -7,15 +7,23 @@ import { StatusBar } from 'expo-status-bar';
 import { useTransportRoutes, useDeleteTransportType } from '../../lib/queries';
 import { useAuthStore } from '../../store/auth';
 import { TransportTypeDto, TransportType, UserRole } from '@transix/shared-types';
-import { theme } from '../../constants/theme';
+import { theme as uiTheme } from '../../constants/theme';
+import { useColorScheme } from '../../components/useColorScheme';
+import Colors from '../../constants/Colors';
+
 
 export default function AdminTransportTypesScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme];
+  const uiShadows = uiTheme.shadows[colorScheme];
+  
   const { user } = useAuthStore();
   const isAdmin = user?.role === UserRole.ADMIN;
   const params = user?.role === UserRole.COMPANY_ADMIN ? { companyId: user.companyId } : {};
   const { data: rawTypes, isLoading: loading } = useTransportRoutes(params);
   const deleteType = useDeleteTransportType();
+
 
   let types = rawTypes || [];
   // If Company Admin, only show categories that have at least one route for them
@@ -46,76 +54,82 @@ export default function AdminTransportTypesScreen() {
 
   const getIcon = (type: TransportType) => {
     switch (type) {
-      case 'CABLE_AEREO': return <Train size={24} color={theme.colors.primary.esmeralda} />;
-      case 'BUS_URBANO': return <Bus size={24} color={theme.colors.primary.esmeralda} />;
-      case 'BUSETA': return <Navigation size={24} color={theme.colors.primary.esmeralda} />;
-      default: return <Bus size={24} color={theme.colors.primary.esmeralda} />;
+      case 'CABLE_AEREO': return <Train size={24} color={colors.primary} />;
+      case 'BUS_URBANO': return <Bus size={24} color={colors.primary} />;
+      case 'BUSETA': return <Navigation size={24} color={colors.primary} />;
+      default: return <Bus size={24} color={colors.primary} />;
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.outline + '20' }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <ChevronLeft size={28} color={theme.colors.neutral[900]} />
+          <ChevronLeft size={28} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.title}>{isAdmin ? "Gestionar Transporte" : "Mis Categorías"}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{isAdmin ? "Gestionar Transporte" : "Mis Categorías"}</Text>
         {isAdmin ? (
           <TouchableOpacity
-            style={styles.addButton}
+            style={[styles.addButton, { backgroundColor: colors.primary }]}
             onPress={() => router.push('/admin/edit-transport-type')}
           >
-            <Plus size={24} color="white" />
+            <Plus size={24} color={colors.onPrimary} />
           </TouchableOpacity>
         ) : <View style={{ width: 40 }} />}
       </View>
 
+
       {loading ? (
         <View style={styles.loading}>
-          <ActivityIndicator size="large" color={theme.colors.primary.esmeralda} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
+
         <ScrollView contentContainerStyle={styles.scroll}>
           {types.map((item) => (
             <TouchableOpacity
               key={item.id}
-              style={styles.card}
+              style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.outline + '20' }, uiShadows.sm]}
               onPress={() => router.push({ pathname: '/admin/routes', params: { typeId: item.id, typeName: item.name } })}
             >
               <View style={styles.cardLeft}>
-                <View style={styles.iconBox}>{getIcon(item.type)}</View>
+                <View style={[styles.iconBox, { backgroundColor: colors.primary + '15' }]}>{getIcon(item.type)}</View>
                 <View>
-                  <Text style={styles.cardTitle}>{item.name}</Text>
-                  <Text style={styles.cardSubtitle}>
+                  <Text style={[styles.cardTitle, { color: colors.text }]}>{item.name}</Text>
+                  <Text style={[styles.cardSubtitle, { color: colors.onSurfaceVariant }]}>
                     {item.routes.length} {item.routes.length === 1 ? 'Ruta configurada' : 'Rutas configuradas'}
                   </Text>
                 </View>
               </View>
+
               {isAdmin && (
                 <View style={styles.cardActions}>
                   <TouchableOpacity
                     onPress={() => router.push({ pathname: '/admin/edit-transport-type', params: { id: item.id } })}
                     style={styles.actionBtn}
                   >
-                    <Edit2 size={20} color={theme.colors.neutral[500]} />
+                    <Edit2 size={20} color={colors.onSurfaceVariant} />
                   </TouchableOpacity>
+
                   <TouchableOpacity
                     onPress={() => handleDelete(item.id, item.name)}
                     style={styles.actionBtn}
                   >
-                    <Trash2 size={20} color={theme.colors.semantic.error} />
+                    <Trash2 size={20} color={colors.error} />
                   </TouchableOpacity>
                 </View>
               )}
             </TouchableOpacity>
+
           ))}
 
           {types.length === 0 && (
             <View style={styles.empty}>
-              <Text style={styles.emptyText}>No hay tipos de transporte configurados.</Text>
+              <Text style={[styles.emptyText, { color: colors.onSurfaceVariant }]}>No hay tipos de transporte configurados.</Text>
             </View>
           )}
+
         </ScrollView>
       )}
     </SafeAreaView>
@@ -125,26 +139,23 @@ export default function AdminTransportTypesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fcf9f5',
   },
+
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 16,
-    backgroundColor: 'white',
-    ...theme.shadows.sm,
   },
+
   backButton: {
     padding: 4,
   },
   title: {
     fontSize: 20,
     fontWeight: '800',
-    color: theme.colors.neutral[900],
   },
   addButton: {
-    backgroundColor: theme.colors.primary.esmeralda,
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -161,13 +172,12 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   card: {
-    backgroundColor: 'white',
     borderRadius: 16,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    ...theme.shadows.sm,
+    borderWidth: 1,
   },
   cardLeft: {
     flexDirection: 'row',
@@ -178,18 +188,15 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: theme.colors.primary.esmeraldaPale,
     alignItems: 'center',
     justifyContent: 'center',
   },
   cardTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: theme.colors.neutral[900],
   },
   cardSubtitle: {
     fontSize: 14,
-    color: theme.colors.neutral[500],
   },
   cardActions: {
     flexDirection: 'row',
@@ -203,7 +210,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    color: theme.colors.neutral[500],
     fontSize: 16,
   },
 });

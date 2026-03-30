@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Bus, Navigation, Info, Train } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
@@ -7,36 +7,211 @@ import { StatusBar } from 'expo-status-bar';
 import { useTransportRoutes } from '../lib/queries';
 import { TransportTypeDto, RouteDto, TransportType } from '@transix/shared-types';
 import { getRouteDisplayName } from '../lib/utils';
+import { useColorScheme } from '../components/useColorScheme';
+import Colors from '../constants/Colors';
 
-const colors = {
-  background: "#fcf9f5",
-  surface: "#fcf9f5",
-  primary: "#006a37",
-  onPrimary: "#ffffff",
-  primaryContainer: "#008647",
-  onPrimaryContainer: "#f6fff4",
-  secondary: "#9e4127",
-  onSecondary: "#ffffff",
-  secondaryContainer: "#ff8b6b",
-  onSecondaryContainer: "#75230b",
-  tertiary: "#705740",
-  onTertiary: "#ffffff",
-  tertiaryContainer: "#8a7057",
-  onTertiaryContainer: "#fffbff",
-  tertiaryFixed: "#fedcbe",
-  onTertiaryFixedVariant: "#59422c",
-  surfaceContainerLow: "#f6f3ef",
-  surfaceContainerLowest: "#ffffff",
-  surfaceContainerHighest: "#e5e2de",
-  onSurface: "#1c1c1a",
-  onSurfaceVariant: "#3e4a3f",
-  outline: "#6e7a6e",
-  manizalesYellow: "#FFD700",
-  manizalesGreen: "#008000",
+const getTransportStyles = (type: TransportType, isDark: boolean) => {
+  const baseColors = {
+    CABLE_AEREO: isDark ? '#E68A75' : '#9e4127',
+    BUS_URBANO: isDark ? '#4DB87A' : '#008000',
+    BUSETA: isDark ? '#FFEC8B' : '#C5A300',
+    DEFAULT: isDark ? '#9E8975' : '#705740',
+  };
+  
+  const color = baseColors[type as keyof typeof baseColors] || baseColors.DEFAULT;
+  return {
+    color,
+    bgIcon: color + '25',
+    shape: color + '15',
+  };
 };
+
+const makeStyles = (colors: any, isDark: boolean) => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    height: 64,
+    backgroundColor: colors.surface,
+  },
+  topBarLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  iconButton: {
+    padding: 8,
+    borderRadius: 999,
+  },
+  logoText: {
+    fontSize: 20,
+    fontWeight: '800',
+    fontStyle: 'italic',
+  },
+  avatarBorder: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: colors.primaryContainer,
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingTop: 32,
+  },
+  headlineSection: {
+    marginBottom: 40,
+  },
+  headlineTitle: {
+    fontSize: 36,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+    marginBottom: 8,
+    color: colors.text,
+  },
+  headlineSubtitle: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: colors.onSurfaceVariant,
+  },
+  grid: {
+    gap: 16,
+  },
+  card: {
+    borderRadius: 24,
+    padding: 24,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'transparent',
+    backgroundColor: colors.surface,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: isDark ? 0.2 : 0.05,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 2,
+      }
+    }),
+  },
+  activeCard: {
+    borderWidth: 2,
+    borderColor: colors.primary,
+    backgroundColor: isDark ? colors.primary + '15' : '#f6fff4',
+  },
+  cardShape: {
+    position: 'absolute',
+    top: -16,
+    right: -16,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+  },
+  cardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  iconContainer: {
+    padding: 12,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  textContainer: {
+    flex: 1,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 4,
+    color: colors.text,
+  },
+  cardSubtitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.onSurfaceVariant,
+  },
+  radioCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.outline,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  radioCircleActive: {
+    borderColor: colors.primary,
+  },
+  radioInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.primary,
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 24,
+    borderTopWidth: 1,
+    backgroundColor: colors.background,
+    borderTopColor: colors.outlineVariant,
+  },
+  continueButton: {
+    height: 64,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    ...Platform.select({
+      ios: {
+        shadowColor: colors.primary,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 8,
+      }
+    })
+  },
+  continueButtonDisabled: {
+    backgroundColor: colors.outlineVariant,
+    ...Platform.select({
+      ios: { shadowOpacity: 0 },
+      android: { elevation: 0 }
+    })
+  },
+  continueButtonTextActive: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: 'white',
+  },
+});
 
 export default function TransportSelectionScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const colors = Colors[colorScheme];
+  const styles = makeStyles(colors, isDark);
+
   const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null);
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
   const [originStopId, setOriginStopId] = useState<string | null>(null);
@@ -49,20 +224,12 @@ export default function TransportSelectionScreen() {
   const selectedRoute = filteredRoutes.find(r => r.id === selectedRouteId);
 
   const getTransportIcon = (type: TransportType) => {
+    const { color } = getTransportStyles(type, isDark);
     switch (type) {
-      case 'CABLE_AEREO': return <Train size={32} color={colors.secondary} />;
-      case 'BUS_URBANO': return <Bus size={32} color={colors.manizalesGreen} />;
-      case 'BUSETA': return <Navigation size={32} color={colors.manizalesYellow} />;
-      default: return <Navigation size={32} color={colors.tertiary} />;
-    }
-  };
-
-  const getBgColors = (type: TransportType) => {
-    switch (type) {
-      case 'CABLE_AEREO': return { bgIcon: 'rgba(158, 65, 39, 0.1)', shape: 'rgba(158, 65, 39, 0.05)' };
-      case 'BUS_URBANO': return { bgIcon: 'rgba(0, 128, 0, 0.1)', shape: 'rgba(0, 128, 0, 0.05)' };
-      case 'BUSETA': return { bgIcon: 'rgba(255, 215, 0, 0.1)', shape: 'rgba(255, 215, 0, 0.05)' };
-      default: return { bgIcon: 'rgba(112, 87, 64, 0.1)', shape: 'rgba(112, 87, 64, 0.05)' };
+      case 'CABLE_AEREO': return <Train size={32} color={color} />;
+      case 'BUS_URBANO': return <Bus size={32} color={color} />;
+      case 'BUSETA': return <Navigation size={32} color={color} />;
+      default: return <Navigation size={32} color={color} />;
     }
   };
 
@@ -84,10 +251,6 @@ export default function TransportSelectionScreen() {
 
   const handleRouteSelect = (routeId: string) => {
     setSelectedRouteId(routeId);
-    const route = filteredRoutes.find(r => r.id === routeId);
-    if (route?.pricingStrategy === 'FLAT') {
-      // If flat, we can continue directly or wait for "Confirmar"
-    }
   };
 
   const handleContinue = () => {
@@ -125,13 +288,13 @@ export default function TransportSelectionScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <View style={styles.topBar}>
         <View style={styles.topBarLeft}>
           <TouchableOpacity onPress={handleBack} style={styles.iconButton}>
-            <ChevronLeft size={28} color="#047857" />
+            <ChevronLeft size={28} color={colors.primary} />
           </TouchableOpacity>
-          <Text style={styles.logoText}>
+          <Text style={[styles.logoText, { color: colors.primary }]}>
             {originStopId ? 'Destino' : originStopId === null && selectedRouteId && isPointToPoint ? 'Origen' : selectedTypeId ? 'Rutas' : 'Selecciona'}
           </Text>
         </View>
@@ -160,7 +323,7 @@ export default function TransportSelectionScreen() {
             {!selectedTypeId ? (
               // Step 1: Transport Types
               transportTypes.map((type) => {
-                const { bgIcon, shape } = getBgColors(type.type);
+                const { bgIcon, shape } = getTransportStyles(type.type, isDark);
                 return (
                   <TouchableOpacity key={type.id} activeOpacity={0.7} onPress={() => handleTypeSelect(type)} style={styles.card}>
                     <View style={[styles.cardShape, { backgroundColor: shape }]} />
@@ -178,9 +341,17 @@ export default function TransportSelectionScreen() {
             ) : !selectedRouteId ? (
               // Step 2: Routes
               filteredRoutes.map((route) => {
-                const { bgIcon, shape } = getBgColors(selectedType!.type);
+                const { bgIcon, shape } = getTransportStyles(selectedType!.type, isDark);
                 return (
-                  <TouchableOpacity key={route.id} activeOpacity={0.7} onPress={() => handleRouteSelect(route.id)} style={[styles.card, selectedRouteId === route.id && styles.activeCard]}>
+                  <TouchableOpacity 
+                    key={route.id} 
+                    activeOpacity={0.7} 
+                    onPress={() => handleRouteSelect(route.id)} 
+                    style={[
+                      styles.card, 
+                      selectedRouteId === route.id && styles.activeCard
+                    ]}
+                  >
                     <View style={[styles.cardShape, { backgroundColor: shape }]} />
                     <View style={styles.cardContent}>
                       <View style={[styles.iconContainer, { backgroundColor: bgIcon }]}>{getTransportIcon(selectedType!.type)}</View>
@@ -201,16 +372,23 @@ export default function TransportSelectionScreen() {
                 selectedRoute?.stops?.map(stop => (
                   <TouchableOpacity key={stop.id} style={styles.card} onPress={() => setOriginStopId(stop.id)}>
                     <View style={styles.cardContent}>
-                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(0,0,0,0.05)' }]}><Navigation size={24} color={colors.outline} /></View>
+                      <View style={[styles.iconContainer, { backgroundColor: colors.surfaceVariant }]}><Navigation size={24} color={colors.outline} /></View>
                       <Text style={styles.cardTitle}>{stop.name}</Text>
                     </View>
                   </TouchableOpacity>
                 ))
               ) : (
                 selectedRoute?.stops?.filter(s => s.id !== originStopId).map(stop => (
-                  <TouchableOpacity key={stop.id} style={[styles.card, destinationStopId === stop.id && styles.activeCard]} onPress={() => setDestinationStopId(stop.id)}>
+                  <TouchableOpacity 
+                    key={stop.id} 
+                    style={[
+                      styles.card, 
+                      destinationStopId === stop.id && styles.activeCard
+                    ]} 
+                    onPress={() => setDestinationStopId(stop.id)}
+                  >
                     <View style={styles.cardContent}>
-                      <View style={[styles.iconContainer, { backgroundColor: 'rgba(0,0,0,0.05)' }]}><Navigation size={24} color={colors.outline} /></View>
+                      <View style={[styles.iconContainer, { backgroundColor: colors.surfaceVariant }]}><Navigation size={24} color={colors.outline} /></View>
                       <Text style={styles.cardTitle}>{stop.name}</Text>
                     </View>
                   </TouchableOpacity>
@@ -220,10 +398,10 @@ export default function TransportSelectionScreen() {
               // Step 2 Continued: Flat Route confirmation
               <View style={[styles.card, styles.activeCard]}>
                 <View style={styles.cardContent}>
-                  <View style={[styles.iconContainer, { backgroundColor: 'rgba(0, 106, 55, 0.1)' }]}><Train size={32} color={colors.primary} /></View>
+                  <View style={[styles.iconContainer, { backgroundColor: colors.primary + '15' }]}><Train size={32} color={colors.primary} /></View>
                   <View style={styles.textContainer}>
-                    <Text style={styles.cardTitle}>{selectedRoute.name}</Text>
-                    <Text style={styles.cardSubtitle}>Tarifa: ${selectedRoute.baseFare.toLocaleString()}</Text>
+                    <Text style={styles.cardTitle}>{selectedRoute?.name}</Text>
+                    <Text style={styles.cardSubtitle}>Tarifa: ${selectedRoute?.baseFare.toLocaleString()}</Text>
                   </View>
                 </View>
               </View>
@@ -252,189 +430,3 @@ export default function TransportSelectionScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    backgroundColor: 'white',
-    height: 64,
-  },
-  topBarLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  iconButton: {
-    padding: 8,
-    borderRadius: 999,
-  },
-  logoText: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: "#065f46", // emerald-800
-    fontStyle: 'italic',
-  },
-  avatarBorder: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: colors.primaryContainer,
-  },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 32,
-  },
-  headlineSection: {
-    marginBottom: 40,
-  },
-  headlineTitle: {
-    fontSize: 36,
-    fontWeight: '800',
-    color: colors.onSurface,
-    letterSpacing: -0.5,
-    marginBottom: 8,
-  },
-  headlineSubtitle: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: colors.tertiary,
-    opacity: 0.8,
-  },
-  grid: {
-    gap: 16,
-  },
-  card: {
-    backgroundColor: colors.surfaceContainerLow,
-    borderRadius: 24,
-    padding: 24,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  activeCard: {
-    borderColor: colors.primary,
-    backgroundColor: "#f6fff4",
-  },
-  cardShape: {
-    position: 'absolute',
-    top: -16,
-    right: -16,
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-  },
-  cardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  iconContainer: {
-    padding: 12,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  textContainer: {
-    flex: 1,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.onSurface,
-    marginBottom: 4,
-  },
-  cardSubtitle: {
-    fontSize: 14,
-    color: colors.onSurfaceVariant,
-    fontWeight: '500',
-  },
-  radioCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: colors.outline,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  radioCircleActive: {
-    borderColor: colors.primary,
-  },
-  radioInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.primary,
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 24,
-    backgroundColor: colors.background,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.05)',
-  },
-  continueButton: {
-    backgroundColor: colors.primary,
-    height: 64,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 8,
-  },
-  continueButtonDisabled: {
-    backgroundColor: colors.surfaceContainerHighest,
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  continueButtonText: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  continueButtonTextActive: {
-    color: 'white',
-  },
-  continueButtonTextDisabled: {
-    color: colors.outline,
-  },
-  footerText: {
-    textAlign: 'center',
-    marginTop: 16,
-    fontSize: 12,
-    color: colors.onSurfaceVariant,
-    opacity: 0.6,
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 60,
-    paddingHorizontal: 40,
-  },
-  emptyText: {
-    textAlign: 'center',
-    marginTop: 16,
-    fontSize: 16,
-    color: colors.onSurfaceVariant,
-    lineHeight: 24,
-  },
-});

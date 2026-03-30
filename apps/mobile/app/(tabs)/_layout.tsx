@@ -3,18 +3,26 @@ import { Tabs } from 'expo-router';
 import { Home, Ticket, User, Map as MapIcon } from 'lucide-react-native';
 import { theme } from '../../constants/theme';
 
+import { useColorScheme } from '@/components/useColorScheme';
+import Colors from '@/constants/Colors';
+
 export default function TabLayout() {
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme];
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: theme.colors.primary.esmeralda,
-        tabBarInactiveTintColor: theme.colors.neutral[400],
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.tabIconDefault,
         tabBarStyle: {
+          backgroundColor: colors.surface,
           borderTopWidth: 1,
-          borderTopColor: theme.colors.neutral[100],
+          borderTopColor: colors.outlineVariant,
           height: 80,
           paddingBottom: 24,
           paddingTop: 12,
+          elevation: 0,
         },
         tabBarLabelStyle: {
           fontFamily: theme.typography.fontFamily.sans,

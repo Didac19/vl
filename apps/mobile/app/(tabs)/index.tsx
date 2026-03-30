@@ -7,54 +7,34 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useAuthStore } from '../../store/auth';
 
-// New color palette from Tailwind config
-const colors = {
-  background: "#fcf9f5",
-  surface: "#fcf9f5",
-  primary: "#006a37",
-  onPrimary: "#ffffff",
-  primaryContainer: "#008647",
-  onPrimaryContainer: "#f6fff4",
-  secondary: "#9e4127",
-  onSecondary: "#ffffff",
-  secondaryContainer: "#ff8b6b",
-  onSecondaryContainer: "#75230b",
-  tertiary: "#705740",
-  onTertiary: "#ffffff",
-  tertiaryContainer: "#8a7057",
-  onTertiaryContainer: "#fffbff",
-  tertiaryFixed: "#fedcbe",
-  onTertiaryFixedVariant: "#59422c",
-  surfaceContainerLow: "#f6f3ef",
-  surfaceContainerLowest: "#ffffff",
-  surfaceContainerHighest: "#e5e2de",
-  outline: "#6e7a6e",
-  outlineVariant: "#bdcabc",
-  onSurface: "#1c1c1a",
-  onSurfaceVariant: "#3e4a3f",
-};
+import { useColorScheme } from '@/components/useColorScheme';
+import Colors from '@/constants/Colors';
 
 export default function DashboardScreen() {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const userName = user?.fullName?.split(' ')[0] || "Usuario";
+  
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme];
+  const styles = makeStyles(colors);
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
       {/* TopAppBar */}
-      <View style={styles.topBar}>
-        <View style={styles.topBarLeft}>
-          <Text style={styles.logoText}>TranSix</Text>
+        <View style={styles.topBar}>
+          <View style={styles.topBarLeft}>
+            <Text style={[styles.logoText, { color: colors.primary }]}>TranSix</Text>
+          </View>
+          <TouchableOpacity style={styles.avatarBorder}>
+            <Image
+              source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB7MgQDF5_085DE_SyvHWvZvrrFDzPMBijC_JOHjq2YlKvTWUdUX8I9YorMRtU-S50FUx8Hd5K45Xfi92EtnpkMkj240bkHMhrsc9n7q-GqrevhkRVqzArjmL10_155KcP71w0pM-L7uRNFzZLHlXHSY-h0NePCBe99pg5pwi9UsAbhZTM1SMRzI5CQxcXuCp0_9WsLFIj5jslZet-JJw5cd6COB58nxZ9a0uSF817xxe8w-WX2ADa8XNuu-0fPvD0MsgPyTKr_UnYH' }}
+              style={styles.avatarImage}
+            />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.avatarBorder}>
-          <Image
-            source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB7MgQDF5_085DE_SyvHWvZvrrFDzPMBijC_JOHjq2YlKvTWUdUX8I9YorMRtU-S50FUx8Hd5K45Xfi92EtnpkMkj240bkHMhrsc9n7q-GqrevhkRVqzArjmL10_155KcP71w0pM-L7uRNFzZLHlXHSY-h0NePCBe99pg5pwi9UsAbhZTM1SMRzI5CQxcXuCp0_9WsLFIj5jslZet-JJw5cd6COB58nxZ9a0uSF817xxe8w-WX2ADa8XNuu-0fPvD0MsgPyTKr_UnYH' }}
-            style={styles.avatarImage}
-          />
-        </TouchableOpacity>
-      </View>
-      <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: colors.surfaceContainerHighest }]} />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Welcome Hero Section */}
@@ -298,7 +278,7 @@ export default function DashboardScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -309,7 +289,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingVertical: 16,
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
   },
   topBarLeft: {
     flexDirection: 'row',
@@ -323,7 +303,6 @@ const styles = StyleSheet.create({
   logoText: {
     fontSize: 24,
     fontWeight: '800',
-    color: "#006d39", // emerald-800
     letterSpacing: -0.5,
   },
   avatarBorder: {
@@ -340,7 +319,6 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: "#f4f4f5", // zinc-100
   },
   scrollContent: {
     paddingHorizontal: 24,

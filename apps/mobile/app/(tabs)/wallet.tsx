@@ -1,16 +1,22 @@
 import React from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { QrCode, Clock, CheckCircle2, AlertCircle, ArrowUpRight, ArrowDownLeft, ChevronRight, Plus } from 'lucide-react-native';
 import { theme } from '../../constants/theme';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useColorScheme } from '@/components/useColorScheme';
+import Colors from '@/constants/Colors';
 
 export default function WalletScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme];
+  const styles = makeStyles(colors);
+
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text style={styles.title}>Mis Pasajes</Text>
@@ -40,7 +46,7 @@ export default function WalletScreen() {
             <Text style={styles.subtitle}>Tiquetes Activos</Text>
             {activeTickets.length === 0 && (
               <View style={styles.emptyState}>
-                <QrCode size={48} color={theme.colors.neutral[300]} />
+                <QrCode size={48} color={colors.outline} />
                 <Text style={styles.emptyText}>No tienes pasajes activos</Text>
               </View>
             )}
@@ -54,11 +60,11 @@ export default function WalletScreen() {
             <View style={styles.ticketInfo}>
               <Text style={styles.ticketRoute}>{item.route}</Text>
               <View style={styles.ticketMeta}>
-                <Clock size={12} color={theme.colors.neutral[500]} />
+                <Clock size={12} color={colors.onSurfaceVariant} />
                 <Text style={styles.ticketExpires}>Expira en {item.expires}</Text>
               </View>
             </View>
-            <ChevronRight size={20} color={theme.colors.neutral[300]} />
+            <ChevronRight size={20} color={colors.outline} />
           </TouchableOpacity>
         )}
         ListFooterComponent={() => (
@@ -69,19 +75,19 @@ export default function WalletScreen() {
             </View>
             {transactions.map((tx, i) => (
               <View key={i} style={styles.txRow}>
-                <View style={[styles.txIcon, { backgroundColor: tx.amount > 0 ? theme.colors.semantic.successLight : theme.colors.semantic.errorLight }]}>
+                <View style={[styles.txIcon, { backgroundColor: tx.amount > 0 ? colors.success + '20' : colors.error + '20' }]}>
                   {tx.amount > 0 ? (
-                    <ArrowDownLeft size={16} color={theme.colors.semantic.success} />
+                    <ArrowDownLeft size={16} color={colors.success} />
                   ) : (
-                    <ArrowUpRight size={16} color={theme.colors.semantic.error} />
+                    <ArrowUpRight size={16} color={colors.error} />
                   )}
                 </View>
                 <View style={styles.txInfo}>
                   <Text style={styles.txDesc}>{tx.description}</Text>
                   <Text style={styles.txDate}>{tx.date}</Text>
                 </View>
-                <Text style={[styles.txAmount, { color: tx.amount > 0 ? theme.colors.semantic.success : theme.colors.neutral[900] }]}>
-                  {tx.amount > 0 ? `+$${tx.amount}` : `-$${Math.abs(tx.amount)}`}
+                <Text style={[styles.txAmount, { color: tx.amount > 0 ? colors.success : colors.text }]}>
+                  {tx.amount > 0 ? `+$${tx.amount.toLocaleString()}` : `-$${Math.abs(tx.amount).toLocaleString()}`}
                 </Text>
               </View>
             ))}
@@ -105,20 +111,20 @@ const transactions = [
   { description: 'Pasaje Cooperativa Medellín', date: '12 May, 06:10 PM', amount: -12000 },
 ];
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fcf9f5',
+    backgroundColor: colors.background,
   },
   header: {
     padding: theme.spacing[4],
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.neutral[100],
+    borderBottomColor: colors.outlineVariant,
   },
   title: {
     fontSize: 24,
     fontWeight: '800',
-    color: theme.colors.neutral[900],
+    color: colors.text,
     fontFamily: theme.typography.fontFamily.sans,
   },
   section: {
@@ -133,38 +139,48 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: theme.colors.neutral[900],
+    color: colors.text,
     marginBottom: theme.spacing[4],
   },
   viewMore: {
-    color: theme.colors.primary.esmeralda,
+    color: colors.primary,
     fontWeight: '600',
     fontSize: 14,
   },
   emptyState: {
     alignItems: 'center',
     paddingVertical: 40,
-    backgroundColor: theme.colors.neutral[50],
+    backgroundColor: colors.surfaceVariant,
     borderRadius: 16,
     borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: theme.colors.neutral[200],
+    borderColor: colors.outline,
   },
   emptyText: {
     marginTop: 12,
-    color: theme.colors.neutral[500],
+    color: colors.onSurfaceVariant,
     fontSize: 15,
   },
   ticketCard: {
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: theme.colors.neutral[100],
-    ...theme.shadows.sm,
+    borderColor: colors.outlineVariant,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   ticketBadge: {
     width: 44,
@@ -180,7 +196,7 @@ const styles = StyleSheet.create({
   ticketRoute: {
     fontSize: 15,
     fontWeight: '600',
-    color: theme.colors.neutral[900],
+    color: colors.text,
     marginBottom: 4,
   },
   ticketMeta: {
@@ -190,7 +206,7 @@ const styles = StyleSheet.create({
   },
   ticketExpires: {
     fontSize: 12,
-    color: theme.colors.neutral[600],
+    color: colors.onSurfaceVariant,
     fontWeight: '500',
   },
   txRow: {
@@ -198,7 +214,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.neutral[50],
+    borderBottomColor: colors.outlineVariant,
   },
   txIcon: {
     width: 40,
@@ -214,12 +230,12 @@ const styles = StyleSheet.create({
   txDesc: {
     fontSize: 15,
     fontWeight: '600',
-    color: theme.colors.neutral[900],
+    color: colors.text,
     marginBottom: 2,
   },
   txDate: {
     fontSize: 12,
-    color: theme.colors.neutral[500],
+    color: colors.onSurfaceVariant,
   },
   txAmount: {
     fontSize: 16,

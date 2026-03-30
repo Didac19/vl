@@ -8,57 +8,72 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useTransportRoutes, useRouteFares, useCreateRoute, useUpdateRoute } from '../../lib/queries';
 import { PricingStrategy, CreateRouteDto, CreateStopDto, CreatePointToPointFareDto, TransportTypeDto } from '@transix/shared-types';
-import { theme } from '../../constants/theme';
+import { theme as uiTheme } from '../../constants/theme';
+import { useColorScheme } from '../../components/useColorScheme';
+import Colors from '../../constants/Colors';
+
 
 const StopItem = React.memo(({ stop, index, drag, isActive, onUpdate, onRemove }: any) => {
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme];
+
   return (
     <ScaleDecorator>
-      <View style={[styles.stopCard, isActive && { backgroundColor: theme.colors.neutral[100], borderColor: theme.colors.primary.esmeralda }]}>
+      <View style={[styles.stopCard, { backgroundColor: colors.surfaceVariant, borderColor: colors.outline + '20' }, isActive && { backgroundColor: colors.primary + '10', borderColor: colors.primary }]}>
         <TouchableOpacity
           onLongPress={drag}
           delayLongPress={100}
           style={styles.dragHandle}
         >
-          <GripVertical size={20} color={theme.colors.neutral[400]} />
+          <GripVertical size={20} color={colors.onSurfaceVariant} />
         </TouchableOpacity>
-        <View style={styles.stopOrder}>
-          <Text style={styles.stopOrderText}>{stop.order}</Text>
+        <View style={[styles.stopOrder, { backgroundColor: colors.primary }]}>
+          <Text style={[styles.stopOrderText, { color: colors.onPrimary }]}>{stop.order}</Text>
         </View>
         <View style={styles.stopForm}>
           <TextInput
-            style={styles.stopInput}
+            style={[styles.stopInput, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.outline + '20' }]}
             value={stop.name}
             onChangeText={(text) => onUpdate(index, 'name', text)}
             placeholder="Nombre de la parada"
+            placeholderTextColor={colors.onSurfaceVariant + '80'}
           />
           <View style={styles.coordRow}>
             <TextInput
-              style={[styles.stopInput, { flex: 1, marginBottom: 0 }]}
+              style={[styles.stopInput, { flex: 1, marginBottom: 0, backgroundColor: colors.surface, color: colors.text, borderColor: colors.outline + '20' }]}
               value={stop.lat.toString()}
               onChangeText={(text) => onUpdate(index, 'lat', parseFloat(text) || 0)}
               keyboardType="numeric"
               placeholder="Lat"
+              placeholderTextColor={colors.onSurfaceVariant + '80'}
             />
             <TextInput
-              style={[styles.stopInput, { flex: 1, marginBottom: 0 }]}
+              style={[styles.stopInput, { flex: 1, marginBottom: 0, backgroundColor: colors.surface, color: colors.text, borderColor: colors.outline + '20' }]}
               value={stop.lng.toString()}
               onChangeText={(text) => onUpdate(index, 'lng', parseFloat(text) || 0)}
               keyboardType="numeric"
               placeholder="Lng"
+              placeholderTextColor={colors.onSurfaceVariant + '80'}
             />
           </View>
         </View>
         <TouchableOpacity onPress={() => onRemove(index)} style={styles.removeBtn}>
-          <Trash2 size={20} color={theme.colors.semantic.error} />
+          <Trash2 size={20} color={colors.error} />
         </TouchableOpacity>
       </View>
     </ScaleDecorator>
   );
 });
 
+
 export default function AdminEditRouteScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme];
+  const uiShadows = uiTheme.shadows[colorScheme];
+
   const { id, typeId } = useLocalSearchParams();
+
   const isEditing = !!id;
 
   const { data: transportTypes, isLoading: isLoadingTypes } = useTransportRoutes();
@@ -200,94 +215,103 @@ export default function AdminEditRouteScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loading}>
-        <ActivityIndicator size="large" color={theme.colors.primary.esmeralda} />
+      <View style={[styles.loading, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaView style={styles.container}>
-        <StatusBar style="dark" />
-        <View style={styles.header}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+        <View style={[styles.header, { backgroundColor: colors.surface }]}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <ChevronLeft size={28} color={theme.colors.neutral[900]} />
+            <ChevronLeft size={28} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.title}>{isEditing ? 'Editar Ruta' : 'Nueva Ruta'}</Text>
-          <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={createRoute.isPending || updateRoute.isPending}>
-            {(createRoute.isPending || updateRoute.isPending) ? <ActivityIndicator size="small" color="white" /> : <Save size={24} color="white" />}
+          <Text style={[styles.title, { color: colors.text }]}>{isEditing ? 'Editar Ruta' : 'Nueva Ruta'}</Text>
+          <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.primary }]} onPress={handleSave} disabled={createRoute.isPending || updateRoute.isPending}>
+            {(createRoute.isPending || updateRoute.isPending) ? <ActivityIndicator size="small" color={colors.onPrimary} /> : <Save size={24} color={colors.onPrimary} />}
           </TouchableOpacity>
         </View>
 
-        <View style={styles.tabs}>
+
+        <View style={[styles.tabs, { backgroundColor: colors.surface, borderBottomColor: colors.outline + '20' }]}>
           <TouchableOpacity
-            style={[styles.tab, activeTab === 'BASIC' && styles.activeTab]}
+            style={[styles.tab, activeTab === 'BASIC' && [styles.activeTab, { borderBottomColor: colors.primary }]]}
             onPress={() => setActiveTab('BASIC')}
           >
-            <Text style={[styles.tabText, activeTab === 'BASIC' && styles.activeTabText]}>Básico</Text>
+            <Text style={[styles.tabText, { color: colors.onSurfaceVariant }, activeTab === 'BASIC' && { color: colors.primary }]}>Básico</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tab, activeTab === 'STOPS' && styles.activeTab]}
+            style={[styles.tab, activeTab === 'STOPS' && [styles.activeTab, { borderBottomColor: colors.primary }]]}
             onPress={() => setActiveTab('STOPS')}
           >
-            <Text style={[styles.tabText, activeTab === 'STOPS' && styles.activeTabText]}>Paradas</Text>
+            <Text style={[styles.tabText, { color: colors.onSurfaceVariant }, activeTab === 'STOPS' && { color: colors.primary }]}>Paradas</Text>
           </TouchableOpacity>
           {form.pricingStrategy === 'POINT_TO_POINT' && (
             <TouchableOpacity
-              style={[styles.tab, activeTab === 'FARES' && styles.activeTab]}
+              style={[styles.tab, activeTab === 'FARES' && [styles.activeTab, { borderBottomColor: colors.primary }]]}
               onPress={() => setActiveTab('FARES')}
             >
-              <Text style={[styles.tabText, activeTab === 'FARES' && styles.activeTabText]}>Tarifas</Text>
+              <Text style={[styles.tabText, { color: colors.onSurfaceVariant }, activeTab === 'FARES' && { color: colors.primary }]}>Tarifas</Text>
             </TouchableOpacity>
           )}
         </View>
 
+
         <View style={{ flex: 1 }}>
           {activeTab === 'BASIC' && (
             <ScrollView contentContainerStyle={styles.scroll}>
-              <View style={styles.section}>
-                <Text style={styles.label}>Nombre de la Ruta</Text>
+              <View style={[styles.section, { backgroundColor: colors.surface, borderColor: colors.outline + '20' }, uiShadows.sm]}>
+                <Text style={[styles.label, { color: colors.text }]}>Nombre de la Ruta</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { backgroundColor: colors.surfaceVariant, color: colors.text, borderColor: colors.outline + '10' }]}
                   value={form.name}
                   onChangeText={(text) => setForm({ ...form, name: text })}
                   placeholder="Ej: Av. Santander (Sideral)"
+                  placeholderTextColor={colors.onSurfaceVariant + '80'}
                 />
 
-                <Text style={styles.label}>Estrategia de Precio</Text>
-                <View style={styles.strategyContainer}>
+
+                <Text style={[styles.label, { color: colors.text }]}>Estrategia de Precio</Text>
+                <View style={[styles.strategyContainer, { backgroundColor: colors.surfaceVariant }]}>
                   <TouchableOpacity
-                    style={[styles.strategyBtn, form.pricingStrategy === 'FLAT' && styles.strategyBtnActive]}
+                    style={[styles.strategyBtn, form.pricingStrategy === 'FLAT' && [styles.strategyBtnActive, { backgroundColor: colors.surface }, uiShadows.sm]]}
                     onPress={() => setForm({ ...form, pricingStrategy: 'FLAT' })}
                   >
-                    <Text style={[styles.strategyText, form.pricingStrategy === 'FLAT' && styles.strategyTextActive]}>TARIFA FIJA</Text>
+                    <Text style={[styles.strategyText, { color: colors.onSurfaceVariant }, form.pricingStrategy === 'FLAT' && { color: colors.primary }]}>TARIFA FIJA</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.strategyBtn, form.pricingStrategy === 'POINT_TO_POINT' && styles.strategyBtnActive]}
+                    style={[styles.strategyBtn, form.pricingStrategy === 'POINT_TO_POINT' && [styles.strategyBtnActive, { backgroundColor: colors.surface }, uiShadows.sm]]}
                     onPress={() => setForm({ ...form, pricingStrategy: 'POINT_TO_POINT' })}
                   >
-                    <Text style={[styles.strategyText, form.pricingStrategy === 'POINT_TO_POINT' && styles.strategyTextActive]}>PUNTO A PUNTO</Text>
+                    <Text style={[styles.strategyText, { color: colors.onSurfaceVariant }, form.pricingStrategy === 'POINT_TO_POINT' && { color: colors.primary }]}>PUNTO A PUNTO</Text>
                   </TouchableOpacity>
                 </View>
 
-                <Text style={styles.label}>Tarifa Base / General (COP)</Text>
+
+                <Text style={[styles.label, { color: colors.text }]}>Tarifa Base / General (COP)</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { backgroundColor: colors.surfaceVariant, color: colors.text, borderColor: colors.outline + '10' }]}
                   value={form.baseFare.toString()}
                   onChangeText={(text) => setForm({ ...form, baseFare: parseInt(text) || 0 })}
                   keyboardType="numeric"
                   placeholder="2500"
+                  placeholderTextColor={colors.onSurfaceVariant + '80'}
                 />
 
-                <View style={styles.infoBox}>
-                  <Info size={16} color={theme.colors.neutral[500]} />
-                  <Text style={styles.infoText}>
+
+                <View style={[styles.infoBox, { backgroundColor: colors.surfaceVariant, borderColor: colors.outline + '10' }]}>
+                  <Info size={16} color={colors.onSurfaceVariant} />
+                  <Text style={[styles.infoText, { color: colors.onSurfaceVariant }]}>
                     {form.pricingStrategy === 'FLAT'
                       ? 'En Tarifa Fija, el usuario paga este valor sin importar el origen o destino.'
                       : 'En Punto a Punto, debes definir precios específicos en la pestaña "Tarifas".'}
                   </Text>
                 </View>
+
               </View>
             </ScrollView>
           )}
@@ -329,34 +353,40 @@ export default function AdminEditRouteScreen() {
               )}
               ListHeaderComponent={
                 <View style={[styles.sectionHeader, { marginBottom: 16 }]}>
-                  <Text style={styles.label}>Paradas en Orden</Text>
-                  <TouchableOpacity style={styles.addSmallBtn} onPress={handleAddStop}>
-                    <Plus size={16} color="white" />
-                    <Text style={styles.addSmallBtnText}>Añadir</Text>
+                  <Text style={[styles.label, { color: colors.text }]}>Paradas en Orden</Text>
+                  <TouchableOpacity style={[styles.addSmallBtn, { backgroundColor: colors.primary }]} onPress={handleAddStop}>
+                    <Plus size={16} color={colors.onPrimary} />
+                    <Text style={[styles.addSmallBtnText, { color: colors.onPrimary }]}>Añadir</Text>
                   </TouchableOpacity>
                 </View>
               }
+
               ListEmptyComponent={
-                <Text style={styles.emptyText}>No hay paradas definidas.</Text>
+                <Text style={[styles.emptyText, { color: colors.onSurfaceVariant }]}>No hay paradas definidas.</Text>
               }
+创新
+创新
+
             />
           )}
 
           {activeTab === 'FARES' && (
             <ScrollView contentContainerStyle={styles.scroll}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.label}>Tabla de Tarifas</Text>
-                <TouchableOpacity style={styles.addSmallBtn} onPress={handleAddFare}>
-                  <Plus size={16} color="white" />
-                  <Text style={styles.addSmallBtnText}>Añadir Tarifa</Text>
+                <Text style={[styles.label, { color: colors.text }]}>Tabla de Tarifas</Text>
+                <TouchableOpacity style={[styles.addSmallBtn, { backgroundColor: colors.primary }]} onPress={handleAddFare}>
+                  <Plus size={16} color={colors.onPrimary} />
+                  <Text style={[styles.addSmallBtnText, { color: colors.onPrimary }]}>Añadir Tarifa</Text>
                 </TouchableOpacity>
               </View>
 
+
               {(form.fares || []).map((fare, index) => (
-                <View key={index} style={styles.fareCard}>
+                <View key={index} style={[styles.fareCard, { backgroundColor: colors.surfaceVariant, borderColor: colors.outline + '10' }]}>
                   <View style={styles.fareFlow}>
                     <View style={styles.fareSelector}>
-                      <Text style={styles.fareLabel}>Desde:</Text>
+                      <Text style={[styles.fareLabel, { color: colors.onSurfaceVariant }]}>Desde:</Text>
+
                       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                         <View style={styles.stopPills}>
                           {form.stops?.map((s, sIdx) => (
@@ -375,16 +405,20 @@ export default function AdminEditRouteScreen() {
                     </View>
 
                     <View style={styles.fareSelector}>
-                      <Text style={styles.fareLabel}>Hacia:</Text>
+                      <Text style={[styles.fareLabel, { color: colors.onSurfaceVariant }]}>Hacia:</Text>
                       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                         <View style={styles.stopPills}>
                           {form.stops?.map((s, sIdx) => (
                             <TouchableOpacity
                               key={sIdx}
-                              style={[styles.stopPill, fare.destinationStopIndex === sIdx && styles.stopPillActive]}
+                              style={[styles.stopPill, { backgroundColor: colors.surface, borderColor: colors.outline + '20' }, fare.destinationStopIndex === sIdx && [styles.stopPillActive, { backgroundColor: colors.primary, borderColor: colors.primary }]]}
                               onPress={() => handleUpdateFare(index, 'destinationStopIndex', sIdx)}
                             >
-                              <Text style={[styles.stopPillText, fare.destinationStopIndex === sIdx && styles.stopPillTextActive]}>
+                              <Text style={[styles.stopPillText, { color: colors.onSurfaceVariant }, fare.destinationStopIndex === sIdx && { color: colors.onPrimary }]}>
+创新
+创新
+创新
+
                                 {s.name || `P${sIdx + 1}`}
                               </Text>
                             </TouchableOpacity>
@@ -393,26 +427,39 @@ export default function AdminEditRouteScreen() {
                       </ScrollView>
                     </View>
 
-                    <View style={styles.fareInputRow}>
-                      <DollarSign size={20} color={theme.colors.primary.esmeralda} />
+                    <View style={[styles.fareInputRow, { borderTopColor: colors.outline + '10' }]}>
+                      <DollarSign size={20} color={colors.primary} />
                       <TextInput
-                        style={[styles.input, { flex: 1, marginBottom: 0 }]}
+                        style={[styles.input, { flex: 1, marginBottom: 0, backgroundColor: colors.surface, color: colors.text, borderColor: colors.outline + '20' }]}
                         value={fare.fareAmount.toString()}
                         onChangeText={(text) => handleUpdateFare(index, 'fareAmount', parseInt(text) || 0)}
                         keyboardType="numeric"
                         placeholder="Valor"
+                        placeholderTextColor={colors.onSurfaceVariant + '80'}
                       />
                       <TouchableOpacity onPress={() => handleRemoveFare(index)} style={styles.removeBtn}>
-                        <Trash2 size={20} color={theme.colors.semantic.error} />
+                        <Trash2 size={20} color={colors.error} />
                       </TouchableOpacity>
                     </View>
+创新
+ innovation
+创新
+ innovation
+创新
+ innovation
+
                   </View>
                 </View>
               ))}
 
               {(form.fares || []).length === 0 && (
-                <Text style={styles.emptyText}>No hay tarifas configuradas para esta ruta.</Text>
+                <Text style={[styles.emptyText, { color: colors.onSurfaceVariant }]}>No hay tarifas configuradas para esta ruta.</Text>
               )}
+创新
+ innovation
+创新
+ innovation
+
             </ScrollView>
           )}
         </View>
@@ -424,15 +471,12 @@ export default function AdminEditRouteScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fcf9f5',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 16,
-    backgroundColor: 'white',
-    ...theme.shadows.sm,
   },
   backButton: {
     padding: 4,
@@ -440,10 +484,8 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '800',
-    color: theme.colors.neutral[900],
   },
   saveButton: {
-    backgroundColor: theme.colors.primary.esmeralda,
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -452,27 +494,21 @@ const styles = StyleSheet.create({
   },
   tabs: {
     flexDirection: 'row',
-    backgroundColor: 'white',
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.neutral[200],
   },
   tab: {
     flex: 1,
     paddingVertical: 12,
     alignItems: 'center',
     borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
   },
   activeTab: {
-    borderBottomColor: theme.colors.primary.esmeralda,
   },
   tabText: {
     fontSize: 14,
     fontWeight: '600',
-    color: theme.colors.neutral[500],
   },
   activeTabText: {
-    color: theme.colors.primary.esmeralda,
   },
   loading: {
     flex: 1,
@@ -483,10 +519,9 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   section: {
-    backgroundColor: 'white',
     borderRadius: 20,
     padding: 20,
-    ...theme.shadows.sm,
+    borderWidth: 1,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -497,22 +532,17 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '700',
-    color: theme.colors.neutral[700],
     marginBottom: 8,
   },
   input: {
-    backgroundColor: theme.colors.neutral[50],
     borderRadius: 12,
     padding: 12,
     fontSize: 16,
-    color: theme.colors.neutral[900],
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: theme.colors.neutral[200],
   },
   strategyContainer: {
     flexDirection: 'row',
-    backgroundColor: theme.colors.neutral[100],
     borderRadius: 12,
     padding: 4,
     marginBottom: 20,
@@ -524,43 +554,34 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   strategyBtnActive: {
-    backgroundColor: 'white',
-    ...theme.shadows.sm,
   },
   strategyText: {
     fontSize: 12,
     fontWeight: '700',
-    color: theme.colors.neutral[500],
   },
   strategyTextActive: {
-    color: theme.colors.primary.esmeralda,
   },
   infoBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: theme.colors.neutral[50],
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: theme.colors.neutral[200],
   },
   infoText: {
     flex: 1,
     fontSize: 12,
-    color: theme.colors.neutral[600],
   },
   addSmallBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: theme.colors.primary.esmeralda,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
   },
   addSmallBtnText: {
-    color: 'white',
     fontSize: 12,
     fontWeight: '700',
   },
@@ -568,12 +589,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: theme.colors.neutral[50],
     padding: 12,
     borderRadius: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: theme.colors.neutral[200],
   },
   dragHandle: {
     padding: 4,
@@ -583,25 +602,21 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: theme.colors.primary.esmeralda,
     alignItems: 'center',
     justifyContent: 'center',
   },
   stopOrderText: {
-    color: 'white',
     fontWeight: '700',
   },
   stopForm: {
     flex: 1,
   },
   stopInput: {
-    backgroundColor: 'white',
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 6,
     fontSize: 14,
     borderWidth: 1,
-    borderColor: theme.colors.neutral[200],
     marginBottom: 8,
   },
   coordRow: {
@@ -613,16 +628,13 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     textAlign: 'center',
-    color: theme.colors.neutral[500],
     marginTop: 20,
   },
   fareCard: {
-    backgroundColor: theme.colors.neutral[50],
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: theme.colors.neutral[200],
   },
   fareFlow: {
     gap: 12,
@@ -633,7 +645,6 @@ const styles = StyleSheet.create({
   fareLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: theme.colors.neutral[600],
   },
   stopPills: {
     flexDirection: 'row',
@@ -643,21 +654,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: 'white',
     borderWidth: 1,
-    borderColor: theme.colors.neutral[200],
   },
   stopPillActive: {
-    backgroundColor: theme.colors.primary.esmeralda,
-    borderColor: theme.colors.primary.esmeralda,
   },
   stopPillText: {
     fontSize: 12,
     fontWeight: '600',
-    color: theme.colors.neutral[600],
   },
   stopPillTextActive: {
-    color: 'white',
   },
   fareInputRow: {
     flexDirection: 'row',
@@ -665,7 +670,6 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 4,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.neutral[200],
     paddingTop: 12,
   },
 });

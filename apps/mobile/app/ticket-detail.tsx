@@ -1,22 +1,16 @@
 import React from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, Dimensions, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Share2, Info, Clock, MapPin, ArrowRight } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useColorScheme } from '@/components/useColorScheme';
+import Colors from '@/constants/Colors';
+import { theme } from '@/constants/theme';
 
 const { width } = Dimensions.get('window');
 
-const colors = {
-  background: "#fcf9f5",
-  primary: "#006a37",
-  onPrimary: "#ffffff",
-  secondary: "#9e4127",
-  onSurface: "#1c1c1a",
-  onSurfaceVariant: "#3e4a3f",
-  surfaceContainerLowest: "#ffffff",
-  outline: "#6e7a6e",
-};
+// Removed hardcoded colors object
 
 export default function TicketDetailScreen() {
   const router = useRouter();
@@ -31,9 +25,14 @@ export default function TicketDetailScreen() {
     qrUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCOykCGLg5T_umC1bunDeEkIvu7me9EhNqexqzo6QpmJLKfGr9jKb8C7OwwuRBwamMhykdHReDjOa-fICs8SL3nfZ64bVZmc27HzMYxPlIPlxM5zYGHeXVIPw4uDcCqNe3h6vO-pb2aETAmk4Tsl3BmWlsHDd2RsMXrFmE81lKbMD5bLh0rx1UUprbZI0G6ZgD1MKPdFpuX56M6z0g6LRrst_vhj71U4ZK42lseVXZmKAm63sgJ0VLE50PWJ3S5o26wKE6uH3jIAE9x'
   };
 
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const colors = Colors[colorScheme];
+  const styles = makeStyles(colors, isDark);
+
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
       {/* Top Bar */}
       <View style={styles.topBar}>
@@ -124,7 +123,7 @@ export default function TicketDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -138,8 +137,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: colors.onSurface,
+    fontWeight: '800',
+    color: colors.text,
   },
   iconButton: {
     padding: 8,
@@ -148,24 +147,32 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   ticketMainCard: {
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: colors.surface,
     borderRadius: 40,
     padding: 32,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.1,
-    shadowRadius: 24,
-    elevation: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: isDark ? 0.3 : 0.08,
+        shadowRadius: 24,
+      },
+      android: {
+        elevation: 8,
+      }
+    }),
     marginBottom: 32,
+    borderWidth: isDark ? 1 : 0,
+    borderColor: colors.outlineVariant,
   },
   ticketHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   activeBadge: {
-    backgroundColor: 'rgba(0, 106, 55, 0.1)',
+    backgroundColor: colors.primary + '15',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 99,
@@ -174,35 +181,47 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 10,
     fontWeight: '800',
-    letterSpacing: 1,
+    letterSpacing: 1.2,
   },
   expiryText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
     color: colors.secondary,
   },
   routeTitle: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '800',
-    color: colors.onSurface,
+    color: colors.text,
     textAlign: 'center',
     marginBottom: 32,
+    lineHeight: 32,
   },
   qrSection: {
     alignItems: 'center',
     marginBottom: 32,
   },
   qrWrapper: {
-    width: width * 0.6,
-    height: width * 0.6,
-    padding: 20,
-    backgroundColor: 'white',
-    borderRadius: 24,
+    width: width * 0.65,
+    height: width * 0.65,
+    padding: 24,
+    backgroundColor: isDark ? '#F1F5F1' : colors.surfaceContainerLowest,
+    borderRadius: 32,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
+    borderColor: colors.outlineVariant,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 4,
+      }
+    }),
   },
   qrImage: {
     width: '100%',
@@ -212,12 +231,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.onSurfaceVariant,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 22,
     paddingHorizontal: 20,
+    fontWeight: '500',
   },
   routeDetails: {
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.05)',
+    borderTopColor: colors.outlineVariant,
     paddingTop: 32,
   },
   routePoint: {
@@ -226,33 +246,34 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   dot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
   },
   pointLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800',
     color: colors.onSurfaceVariant,
-    letterSpacing: 1,
-    marginBottom: 2,
+    letterSpacing: 1.2,
+    marginBottom: 4,
+    textTransform: 'uppercase',
   },
   pointValue: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
-    color: colors.onSurface,
+    color: colors.text,
   },
   routeLine: {
-    width: 2,
-    height: 24,
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    marginLeft: 5,
+    width: 2.5,
+    height: 28,
+    backgroundColor: colors.outlineVariant,
+    marginLeft: 6,
     marginVertical: 4,
   },
   infoSection: {
     gap: 20,
     marginBottom: 40,
-    paddingHorizontal: 8,
+    paddingHorizontal: 12,
   },
   infoItem: {
     flexDirection: 'row',
@@ -262,15 +283,18 @@ const styles = StyleSheet.create({
   infoText: {
     fontSize: 14,
     color: colors.onSurfaceVariant,
-    fontWeight: '500',
+    fontWeight: '600',
+    lineHeight: 20,
+    flex: 1,
   },
   helpButton: {
     alignItems: 'center',
     padding: 16,
+    marginBottom: 20,
   },
   helpButtonText: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '700',
     color: colors.primary,
     textDecorationLine: 'underline',
   },

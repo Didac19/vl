@@ -1,23 +1,134 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Lock, Eye, EyeOff, Save } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useChangePassword } from '../lib/queries';
+import { useColorScheme } from '../components/useColorScheme';
+import Colors from '../constants/Colors';
+import { theme } from '@/constants/theme';
 
-const colors = {
-  background: "#fcf9f5",
-  primary: "#006a37",
-  onPrimary: "#ffffff",
-  onSurface: "#1c1c1a",
-  onSurfaceVariant: "#3e4a3f",
-  surfaceContainerLowest: "#ffffff",
-  outline: "#6e7a6e",
-};
+const makeStyles = (colors: any) => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  backButton: {
+    padding: 8,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  scrollContent: {
+    padding: 24,
+  },
+  form: {
+    backgroundColor: colors.surface,
+    borderRadius: 28,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 3,
+      }
+    }),
+    marginBottom: 32,
+  },
+  formTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 24,
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.onSurfaceVariant,
+    marginBottom: 8,
+    marginLeft: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+    paddingHorizontal: 16,
+  },
+  inputIcon: {
+    marginRight: 12,
+  },
+  eyeIcon: {
+    padding: 8,
+  },
+  input: {
+    flex: 1,
+    height: 56,
+    fontSize: 16,
+    color: colors.text,
+  },
+  saveButton: {
+    backgroundColor: colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 56,
+    borderRadius: 16,
+    marginTop: 12,
+    gap: 12,
+  },
+  saveButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
+  infoBox: {
+    padding: 24,
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: colors.primary + '30',
+    backgroundColor: colors.primary + '10',
+  },
+  infoText: {
+    fontSize: 14,
+    color: colors.onSurfaceVariant,
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+});
 
 export default function ChangePasswordScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme];
+  const styles = makeStyles(colors);
+
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -58,7 +169,7 @@ export default function ChangePasswordScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
       
       {/* Header */}
       <View style={styles.header}>
@@ -69,23 +180,25 @@ export default function ChangePasswordScreen() {
         <View style={{ width: 44 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.form}>
+          <Text style={styles.formTitle}>Actualizar Seguridad</Text>
+
           {/* Current Password */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Contraseña Actual</Text>
             <View style={styles.inputWrapper}>
-              <Lock size={20} color={colors.outline} style={styles.inputIcon} />
+              <Lock size={20} color={colors.onSurfaceVariant} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 value={currentPassword}
                 onChangeText={setCurrentPassword}
                 placeholder="••••••••"
-                placeholderTextColor={colors.outline + '80'}
+                placeholderTextColor={colors.outline}
                 secureTextEntry={!showCurrent}
               />
               <TouchableOpacity onPress={() => setShowCurrent(!showCurrent)} style={styles.eyeIcon}>
-                {showCurrent ? <EyeOff size={20} color={colors.outline} /> : <Eye size={20} color={colors.outline} />}
+                {showCurrent ? <EyeOff size={20} color={colors.onSurfaceVariant} /> : <Eye size={20} color={colors.onSurfaceVariant} />}
               </TouchableOpacity>
             </View>
           </View>
@@ -94,17 +207,17 @@ export default function ChangePasswordScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Nueva Contraseña</Text>
             <View style={styles.inputWrapper}>
-              <Lock size={20} color={colors.outline} style={styles.inputIcon} />
+              <Lock size={20} color={colors.onSurfaceVariant} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 value={newPassword}
                 onChangeText={setNewPassword}
                 placeholder="Mínimo 8 caracteres"
-                placeholderTextColor={colors.outline + '80'}
+                placeholderTextColor={colors.outline}
                 secureTextEntry={!showNew}
               />
               <TouchableOpacity onPress={() => setShowNew(!showNew)} style={styles.eyeIcon}>
-                {showNew ? <EyeOff size={20} color={colors.outline} /> : <Eye size={20} color={colors.outline} />}
+                {showNew ? <EyeOff size={20} color={colors.onSurfaceVariant} /> : <Eye size={20} color={colors.onSurfaceVariant} />}
               </TouchableOpacity>
             </View>
           </View>
@@ -113,17 +226,17 @@ export default function ChangePasswordScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Confirmar Nueva Contraseña</Text>
             <View style={styles.inputWrapper}>
-              <Lock size={20} color={colors.outline} style={styles.inputIcon} />
+              <Lock size={20} color={colors.onSurfaceVariant} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 placeholder="Repite la nueva contraseña"
-                placeholderTextColor={colors.outline + '80'}
+                placeholderTextColor={colors.outline}
                 secureTextEntry={!showConfirm}
               />
               <TouchableOpacity onPress={() => setShowConfirm(!showConfirm)} style={styles.eyeIcon}>
-                {showConfirm ? <EyeOff size={20} color={colors.outline} /> : <Eye size={20} color={colors.outline} />}
+                {showConfirm ? <EyeOff size={20} color={colors.onSurfaceVariant} /> : <Eye size={20} color={colors.onSurfaceVariant} />}
               </TouchableOpacity>
             </View>
           </View>
@@ -150,105 +263,8 @@ export default function ChangePasswordScreen() {
             Usa una contraseña segura que no utilices en otros sitios. Debe tener al menos 8 caracteres.
           </Text>
         </View>
+
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.onSurface,
-  },
-  scrollContent: {
-    padding: 24,
-  },
-  form: {
-    backgroundColor: colors.surfaceContainerLowest,
-    borderRadius: 24,
-    padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-    marginBottom: 32,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.onSurfaceVariant,
-    marginBottom: 8,
-    marginLeft: 4,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
-    paddingHorizontal: 16,
-  },
-  inputIcon: {
-    marginRight: 12,
-  },
-  eyeIcon: {
-    padding: 8,
-  },
-  input: {
-    flex: 1,
-    height: 56,
-    fontSize: 16,
-    color: colors.onSurface,
-  },
-  saveButton: {
-    backgroundColor: colors.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 56,
-    borderRadius: 16,
-    marginTop: 12,
-    gap: 12,
-  },
-  saveButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  disabledButton: {
-    opacity: 0.6,
-  },
-  infoBox: {
-    padding: 20,
-    backgroundColor: 'rgba(0, 106, 55, 0.05)',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 106, 55, 0.1)',
-  },
-  infoText: {
-    fontSize: 14,
-    color: colors.onSurfaceVariant,
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-});
