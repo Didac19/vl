@@ -65,6 +65,22 @@ export default class UserSeeder implements Seeder {
       }
     }
 
+    // Create a normal test user
+    const userEmail = 'user@vialibre.com';
+    let normalUser = await userRepo.findOneBy({ email: userEmail });
+    if (!normalUser) {
+      console.log('🌱 Creating normal test user...');
+      const hashedPassword = await bcrypt.hash('user123', 10);
+      normalUser = userRepo.create({
+        fullName: 'Diego Viajero',
+        email: userEmail,
+        password: hashedPassword,
+        phone: '3110000000',
+        role: UserRole.USER,
+      });
+      await userRepo.save(normalUser);
+    }
+
     const userFactory = await factoryManager.get(User);
     // ...
 

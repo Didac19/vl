@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Image, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Menu, Search, ArrowRight, Home, Briefcase, Plus, Map as MapIcon, Bus, Train, LocateFixed, Navigation } from 'lucide-react-native';
+import { Menu, Search, ArrowRight, Home, Briefcase, Plus, Map as MapIcon, Bus, Train, LocateFixed, Navigation, QrCode } from 'lucide-react-native';
 import { theme } from '../../constants/theme';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -27,12 +27,20 @@ export default function DashboardScreen() {
           <View style={styles.topBarLeft}>
             <Text style={[styles.logoText, { color: colors.primary }]}>TranSix</Text>
           </View>
-          <TouchableOpacity style={styles.avatarBorder}>
-            <Image
-              source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB7MgQDF5_085DE_SyvHWvZvrrFDzPMBijC_JOHjq2YlKvTWUdUX8I9YorMRtU-S50FUx8Hd5K45Xfi92EtnpkMkj240bkHMhrsc9n7q-GqrevhkRVqzArjmL10_155KcP71w0pM-L7uRNFzZLHlXHSY-h0NePCBe99pg5pwi9UsAbhZTM1SMRzI5CQxcXuCp0_9WsLFIj5jslZet-JJw5cd6COB58nxZ9a0uSF817xxe8w-WX2ADa8XNuu-0fPvD0MsgPyTKr_UnYH' }}
-              style={styles.avatarImage}
-            />
-          </TouchableOpacity>
+          <View style={styles.topBarRight}>
+            <TouchableOpacity 
+              style={styles.scanButtonAction}
+              onPress={() => router.push('/scan')}
+            >
+              <QrCode size={24} color={colors.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.avatarBorder}>
+              <Image
+                source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB7MgQDF5_085DE_SyvHWvZvrrFDzPMBijC_JOHjq2YlKvTWUdUX8I9YorMRtU-S50FUx8Hd5K45Xfi92EtnpkMkj240bkHMhrsc9n7q-GqrevhkRVqzArjmL10_155KcP71w0pM-L7uRNFzZLHlXHSY-h0NePCBe99pg5pwi9UsAbhZTM1SMRzI5CQxcXuCp0_9WsLFIj5jslZet-JJw5cd6COB58nxZ9a0uSF817xxe8w-WX2ADa8XNuu-0fPvD0MsgPyTKr_UnYH' }}
+                style={styles.avatarImage}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
         <View style={[styles.divider, { backgroundColor: colors.surfaceContainerHighest }]} />
 
@@ -295,6 +303,16 @@ const makeStyles = (colors: any) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
+  },
+  topBarRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  scanButtonAction: {
+    padding: 8,
+    borderRadius: 12,
+    backgroundColor: colors.primaryContainer,
   },
   iconButton: {
     padding: 8,

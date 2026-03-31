@@ -19,29 +19,21 @@ import { useLogin } from '@/lib/queries';
 import { useAuthStore } from '@/store/auth';
 import { StatusBar } from 'expo-status-bar';
 import { UserRole } from '@transix/shared-types';
+import { useColorScheme } from '@/components/useColorScheme';
+import Colors from '@/constants/Colors';
 
 const { width, height } = Dimensions.get('window');
 
-const COLORS = {
-  primary: '#006a37',
-  primaryContainer: '#008647',
-  onPrimary: '#ffffff',
-  secondary: '#9e4127',
-  tertiary: '#705740',
-  background: '#fcf9f5',
-  surfaceLowest: '#ffffff',
-  surfaceLow: '#f6f3ef',
-  onSurface: '#1c1c1a',
-  onSurfaceVariant: '#3e4a3f',
-  outline: '#6e7a6e',
-  outlineVariant: '#bdcabc',
-};
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { setAuth, fetchProfile } = useAuthStore();
   const loginMutation = useLogin();
+
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme];
+  const styles = makeStyles(colors);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -74,17 +66,17 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
       {/* Background Mesh Gradients */}
       <View style={styles.meshContainer}>
         <LinearGradient
-          colors={['rgba(0, 106, 55, 0.05)', 'transparent']}
+          colors={[`${colors.primary}0D`, 'transparent']}
           start={{ x: 0, y: 0 }}
           end={{ x: 0.5, y: 0.5 }}
           style={styles.gradientTopLeft}
         />
         <LinearGradient
-          colors={['rgba(158, 65, 39, 0.05)', 'transparent']}
+          colors={[`${colors.secondary}0D`, 'transparent']}
           start={{ x: 1, y: 1 }}
           end={{ x: 0.5, y: 0.5 }}
           style={styles.gradientBottomRight}
@@ -113,12 +105,12 @@ export default function LoginScreen() {
                   <Text style={styles.label}>Correo electrónico</Text>
                   <View style={styles.inputWrapper}>
                     <View style={styles.inputIcon}>
-                      <Mail size={20} color={COLORS.outline} />
+                      <Mail size={20} color={colors.outline} />
                     </View>
                     <TextInput
                       style={styles.input}
                       placeholder="nombre@ejemplo.com"
-                      placeholderTextColor={`${COLORS.outline}80`}
+                      placeholderTextColor={`${colors.onSurface}60`}
                       keyboardType="email-address"
                       autoCapitalize="none"
                       value={email}
@@ -137,12 +129,12 @@ export default function LoginScreen() {
                   </View>
                   <View style={styles.inputWrapper}>
                     <View style={styles.inputIcon}>
-                      <Lock size={20} color={COLORS.outline} />
+                      <Lock size={20} color={colors.outline} />
                     </View>
                     <TextInput
                       style={styles.input}
                       placeholder="••••••••"
-                      placeholderTextColor={`${COLORS.outline}80`}
+                      placeholderTextColor={`${colors.onSurface}60`}
                       secureTextEntry
                       value={password}
                       onChangeText={setPassword}
@@ -172,11 +164,11 @@ export default function LoginScreen() {
               {/* Social Logins */}
               <View style={styles.socialRow}>
                 <TouchableOpacity style={styles.socialButton}>
-                  <Chrome size={20} color={COLORS.onSurface} strokeWidth={2.5} />
+                  <Chrome size={20} color={colors.onSurface} strokeWidth={2.5} />
                   <Text style={styles.socialButtonText}>Google</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.socialButton, styles.socialButtonDark]}>
-                  <Apple size={20} color={COLORS.background} fill={COLORS.background} />
+                  <Apple size={20} color={colors.background} fill={colors.background} />
                   <Text style={[styles.socialButtonText, styles.socialButtonTextLight]}>Apple</Text>
                 </TouchableOpacity>
               </View>
@@ -196,10 +188,10 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   meshContainer: {
     ...StyleSheet.absoluteFillObject,
@@ -235,34 +227,34 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontSize: 48,
     fontWeight: '800',
-    color: COLORS.primary,
+    color: colors.primary,
     letterSpacing: -2,
     fontFamily: Platform.OS === 'ios' ? 'Helvetica' : 'sans-serif-condensed',
   },
   brandSubtitle: {
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.tertiary,
+    color: colors.tertiary,
     letterSpacing: 1.5,
     opacity: 0.8,
     marginTop: 4,
   },
   card: {
-    backgroundColor: COLORS.surfaceLowest,
+    backgroundColor: colors.surfaceContainerLowest,
     borderRadius: 32,
     padding: 32,
-    shadowColor: COLORS.primary,
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 24 },
     shadowOpacity: 0.05,
     shadowRadius: 48,
     elevation: 8,
     borderWidth: 1,
-    borderColor: `${COLORS.outlineVariant}20`,
+    borderColor: `${colors.outlineVariant}20`,
   },
   welcomeText: {
     fontSize: 24,
     fontWeight: '700',
-    color: COLORS.onSurface,
+    color: colors.onSurface,
     marginBottom: 32,
     fontFamily: Platform.OS === 'ios' ? 'Helvetica Neue' : 'sans-serif-medium',
   },
@@ -280,18 +272,18 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.tertiary,
+    color: colors.tertiary,
     paddingHorizontal: 4,
   },
   forgotPassword: {
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.secondary,
+    color: colors.secondary,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surfaceLow,
+    backgroundColor: colors.surfaceContainerLow,
     borderRadius: 12,
     overflow: 'hidden',
   },
@@ -305,15 +297,15 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 12,
     fontSize: 16,
-    color: COLORS.onSurface,
+    color: colors.onSurface,
   },
   submitButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: COLORS.primary,
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.1,
     shadowRadius: 16,
@@ -324,7 +316,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   submitButtonText: {
-    color: COLORS.onPrimary,
+    color: colors.onPrimary,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -336,11 +328,11 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: `${COLORS.outlineVariant}50`,
+    backgroundColor: `${colors.outlineVariant}50`,
   },
   dividerText: {
     fontSize: 12,
-    color: COLORS.outline,
+    color: colors.outline,
     paddingHorizontal: 16,
     fontWeight: '500',
   },
@@ -354,20 +346,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
-    backgroundColor: COLORS.surfaceLow,
+    backgroundColor: colors.surfaceContainerLow,
     paddingVertical: 14,
     borderRadius: 12,
   },
   socialButtonDark: {
-    backgroundColor: COLORS.onSurface,
+    backgroundColor: colors.onSurface,
   },
   socialButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.onSurface,
+    color: colors.onSurface,
   },
   socialButtonTextLight: {
-    color: COLORS.background,
+    color: colors.background,
   },
   footer: {
     marginTop: 32,
@@ -375,11 +367,11 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 14,
-    color: COLORS.onSurfaceVariant,
+    color: colors.onSurfaceVariant,
     fontWeight: '500',
   },
   registerLink: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '700',
   },
 });
