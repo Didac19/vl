@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3000/api/v1', // use actual IP for physical device testing
+  baseURL: 'http://192.168.1.116:3000/api/v1', // use actual IP for physical device testing
   timeout: 10000,
 });
 
