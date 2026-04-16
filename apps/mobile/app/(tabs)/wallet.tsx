@@ -5,6 +5,7 @@ import { QrCode, Clock, CheckCircle2, AlertCircle, ArrowUpRight, ArrowDownLeft, 
 import { theme } from '../../constants/theme';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useMyWallet } from '@/lib/queries';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 
@@ -13,6 +14,10 @@ export default function WalletScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme];
   const styles = makeStyles(colors);
+
+  const { data: wallet, isLoading: isLoadingWallet } = useMyWallet();
+  const walletBalance = wallet?.balance ? wallet.balance / 100 : 0;
+  const recentTx = wallet?.transactions || transactions;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -33,7 +38,20 @@ export default function WalletScreen() {
             }}
           >
             <Plus size={18} color="white" />
-            <Text style={{ color: 'white', fontWeight: '700', fontSize: 14 }}>Nuevo</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.balanceCard}>
+          <View>
+            <Text style={styles.balanceLabel}>Saldo Disponible</Text>
+            <Text style={styles.balanceAmount}>${walletBalance.toLocaleString()}</Text>
+          </View>
+          <TouchableOpacity
+            onPress={() => router.push('/top-up')}
+            style={styles.topUpButton}
+          >
+            <Plus size={16} color={colors.primary} />
+            <Text style={styles.topUpButtonText}>Recargar</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -73,10 +91,15 @@ export default function WalletScreen() {
               <Text style={styles.subtitle}>Actividad Reciente</Text>
               <TouchableOpacity><Text style={styles.viewMore}>Filtrar</Text></TouchableOpacity>
             </View>
-            {transactions.map((tx, i) => (
-              <View key={i} style={styles.txRow}>
-                <View style={[styles.txIcon, { backgroundColor: tx.amount > 0 ? colors.success + '20' : colors.error + '20' }]}>
-                  {tx.amount > 0 ? (
+            {recentTx.length === 0 && (
+              <Text style={styles.emptyText}>No hay actividad reciente</Text>
+            )}
+            {recentTx.map((tx: any, i: number) => {
+              const amount = tx.amount ? (tx.type === 'CREDIT' ? tx.amount / 100 : -tx.amount / 100) : tx.amount;
+              return (
+              <View key={tx.id || i} style={styles.txRow}>
+                <View style={[styles.txIcon, { backgroundColor: amount > 0 ? colors.success + '20' : colors.error + '20' }]}>
+                  {amount > 0 ? (
                     <ArrowDownLeft size={16} color={colors.success} />
                   ) : (
                     <ArrowUpRight size={16} color={colors.error} />
@@ -84,13 +107,13 @@ export default function WalletScreen() {
                 </View>
                 <View style={styles.txInfo}>
                   <Text style={styles.txDesc}>{tx.description}</Text>
-                  <Text style={styles.txDate}>{tx.date}</Text>
+                  <Text style={styles.txDate}>{tx.createdAt ? new Date(tx.createdAt).toLocaleString() : tx.date}</Text>
                 </View>
-                <Text style={[styles.txAmount, { color: tx.amount > 0 ? colors.success : colors.text }]}>
-                  {tx.amount > 0 ? `+$${tx.amount.toLocaleString()}` : `-$${Math.abs(tx.amount).toLocaleString()}`}
+                <Text style={[styles.txAmount, { color: amount > 0 ? colors.success : colors.text }]}>
+                  {amount > 0 ? `+$${amount.toLocaleString()}` : `-$${Math.abs(amount).toLocaleString()}`}
                 </Text>
               </View>
-            ))}
+            )})}
           </View>
         )}
         contentContainerStyle={{ padding: theme.spacing[4] }}
@@ -126,6 +149,41 @@ const makeStyles = (colors: any) => StyleSheet.create({
     fontWeight: '800',
     color: colors.text,
     fontFamily: theme.typography.fontFamily.sans,
+  },
+  balanceCard: {
+    marginTop: 20,
+    padding: 20,
+    backgroundColor: colors.surfaceVariant,
+    borderRadius: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+  },
+  balanceLabel: {
+    fontSize: 14,
+    color: colors.onSurfaceVariant,
+    marginBottom: 4,
+  },
+  balanceAmount: {
+    fontSize: 32,
+    fontWeight: '900',
+    color: colors.text,
+  },
+  topUpButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.primary + '15',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+  topUpButtonText: {
+    color: colors.primary,
+    fontWeight: '700',
+    fontSize: 14,
   },
   section: {
     marginBottom: theme.spacing[4],

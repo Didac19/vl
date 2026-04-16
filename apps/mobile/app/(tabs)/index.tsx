@@ -6,6 +6,7 @@ import { theme } from '../../constants/theme';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useAuthStore } from '../../store/auth';
+import { useMyWallet } from '../../lib/queries';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
@@ -14,6 +15,9 @@ export default function DashboardScreen() {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const userName = user?.fullName?.split(' ')[0] || "Usuario";
+
+  const { data: wallet } = useMyWallet();
+  const walletBalance = wallet?.balance != null ? wallet.balance / 100 : null;
   
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme];
@@ -110,13 +114,15 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* Balance Quick View (NEW/UPDATED) */}
+        {/* Balance Quick View */}
         <View style={[styles.balanceQuickCard, { backgroundColor: colors.tertiary }]}>
           <View>
             <Text style={styles.balanceLabelSmall}>Saldo en Billetera</Text>
-            <Text style={styles.balanceValueLarge}>$42.500 COP</Text>
+            <Text style={styles.balanceValueLarge}>
+              {walletBalance != null ? `$${walletBalance.toLocaleString()} COP` : '— COP'}
+            </Text>
           </View>
-          <TouchableOpacity style={styles.topUpButton}>
+          <TouchableOpacity style={styles.topUpButton} onPress={() => router.push('/top-up')}>
             <Text style={styles.topUpButtonText}>Recargar</Text>
           </TouchableOpacity>
         </View>

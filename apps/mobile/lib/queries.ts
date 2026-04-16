@@ -150,3 +150,33 @@ export const useDeleteAccount = () => {
     },
   });
 };
+
+// ==== WALLET HOOKS ====
+
+export const walletKeys = {
+  all: ['wallet'] as const,
+  mine: () => [...walletKeys.all, 'mine'] as const,
+};
+
+export const useMyWallet = () => {
+  return useQuery({
+    queryKey: walletKeys.mine(),
+    queryFn: async () => {
+      const response = await api.get('/wallet');
+      return response.data;
+    },
+  });
+};
+
+export const useTopUpWallet = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (amountCents: number) => {
+      const response = await api.post('/wallet/top-up', { amountCents });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: walletKeys.mine() });
+    },
+  });
+};
