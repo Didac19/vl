@@ -26,6 +26,9 @@ export class BoardingLog {
   @Column({ name: 'amount', type: 'numeric', nullable: true })
   amount: number;
 
+  @Column({ name: 'quantity', type: 'int', default: 1 })
+  quantity: number;
+
   @CreateDateColumn({ name: 'boarded_at', type: 'timestamptz' })
   boardedAt: Date;
 }

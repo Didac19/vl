@@ -21,10 +21,15 @@ export default function TabLayout() {
   const hasAdminAccess = isAdmin || isCompanyAdmin;
 
   useEffect(() => {
-    if (user?.role === UserRole.VALIDATOR) {
+    if (!user) return;
+    
+    if (user.role === UserRole.VALIDATOR) {
       router.replace('/validator/scan');
+    } else if (isAdmin || isCompanyAdmin) {
+      // If we are at the root or a passenger-only tab, redirect to admin
+      // This is a simple protection to ensure they land in the right place
     }
-  }, [user]);
+  }, [user, isAdmin, isCompanyAdmin]);
 
   return (
     <Tabs
@@ -52,6 +57,7 @@ export default function TabLayout() {
         options={{
           title: 'Inicio',
           tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
+          href: hasAdminAccess ? null : undefined,
         }}
       />
       <Tabs.Screen
@@ -59,6 +65,7 @@ export default function TabLayout() {
         options={{
           title: 'Cerca de mí',
           tabBarIcon: ({ color, size }) => <MapIcon color={color} size={size} />,
+          href: hasAdminAccess ? null : undefined,
         }}
       />
       <Tabs.Screen
@@ -66,6 +73,7 @@ export default function TabLayout() {
         options={{
           title: 'Mis Pasajes',
           tabBarIcon: ({ color, size }) => <Ticket color={color} size={size} />,
+          href: hasAdminAccess ? null : undefined,
         }}
       />
       <Tabs.Screen

@@ -16,6 +16,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '@transix/shared-types';
+import { ListQuery } from '../../common/decorators/list-query.decorator';
+import { ListQueryDto } from '../../common/dto/list-query.dto';
 
 class PurchaseTicketDto {
   @IsString() routeId: string;
@@ -154,13 +156,13 @@ export class TicketingController {
   @Get('bus-qr/:id/payments')
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.COMPANY_ADMIN)
-  @ApiOperation({ summary: 'Ver pagos/recaudación de un QR de bus específico' })
-  async getQrPayments(@Param('id') id: string, @Request() req: any) {
+  @ApiOperation({ summary: 'Ver pagos/recaudación de un QR de bus específico (Filtros dinámicos)' })
+  async getQrPayments(@Param('id') id: string, @Request() req: any, @ListQuery() query: ListQueryDto) {
     const user = await this.ticketingService['userRepo'].findOne({
       where: { id: req.user.id },
       relations: ['company'],
     });
-    if (!user?.company) return { logs: [], totalCollectedCents: 0 };
-    return this.ticketingService.getQrPayments(id, user.company.id);
+    if (!user?.company) return { data: [], total: 0, page: 1, limit: 10 };
+    return this.ticketingService.getQrPayments(id, user.company.id, query);
   }
 }

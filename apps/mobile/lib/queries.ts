@@ -227,12 +227,12 @@ export const useCompanyBusQrs = () => {
   });
 };
 
-export const useQrPayments = (busQrId: string) => {
+export const useQrPayments = (busQrId: string, params?: any) => {
   return useQuery({
-    queryKey: busQrKeys.payments(busQrId),
+    queryKey: [...busQrKeys.payments(busQrId), params],
     queryFn: async () => {
-      const response = await api.get(`/tickets/bus-qr/${busQrId}/payments`);
-      return response.data as { logs: any[]; totalCollectedCents: number; busQr: any };
+      const response = await api.get(`/tickets/bus-qr/${busQrId}/payments`, { params });
+      return response.data as { data: any[]; total: number; totalCollectedCents: number; busQr: any };
     },
     enabled: !!busQrId,
   });

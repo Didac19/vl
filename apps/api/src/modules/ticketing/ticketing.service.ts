@@ -11,6 +11,8 @@ import { User } from '../users/entities/user.entity';
 import { WalletService } from '../wallet/wallet.service';
 import { TransportService } from '../transport/transport.service';
 import * as Shared from '@transix/shared-types';
+import { ListQueryDto, QueryOperator } from '../../common/dto/list-query.dto';
+import { QueryParser } from '../../common/utils/query-parser.util';
 
 // Mock route data — replace with TransportModule integration in Phase 3
 
@@ -333,10 +335,9 @@ export class TicketingService {
       this.boardingLogRepo.create({
         routeId: payload.routeId,
         amount: totalAmountCents,
-        tripId: payload.busId, // Using busId as tripId for simplicity
-        validator: { id: userId } as any, // In this case validator is the user paying? 
-        // Actually boarding log usually records the validator device. 
-        // but here it's a direct payment.
+        tripId: payload.busId,
+        quantity: dto.quantity,
+        validator: { id: userId } as any,
       })
     );
 
@@ -353,18 +354,56 @@ export class TicketingService {
     });
   }
 
-  async getQrPayments(busQrId: string, companyId: string): Promise<{ logs: BoardingLog[]; totalCollectedCents: number }> {
+  async getQrPayments(
+    busQrId: string, 
+    companyId: string, 
+    query: ListQueryDto = { page: 1, limit: 10, filters: {}, sort: {} }
+  ): Promise<Shared.PaginatedResponseDto<BoardingLog> & { totalCollectedCents: number, busQr: BusQr }> {
     const busQr = await this.busQrRepo.findOne({
       where: { id: busQrId, company: { id: companyId } },
+      relations: ['route'],
     });
     if (!busQr) throw new NotFoundException('QR no encontrado');
 
-    const logs = await this.boardingLogRepo.find({
-      where: { tripId: busQr.busId, routeId: busQr.route?.id },
-      order: { boardedAt: 'DESC' },
+    // Default filter for the current month if boardedAt not provided
+    if (!query.filters.boardedAt) {
+      const now = new Date();
+      const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
+      const endOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
+      
+      query.filters.boardedAt = [{
+        operator: QueryOperator.BETWEEN,
+        value: [startOfMonth.toISOString(), endOfMonth.toISOString()],
+      }];
+    }
+
+    // Fixed filters for this specific QR
+    const additionalOptions = {
+      where: { 
+        tripId: busQr.busId, 
+        routeId: busQr.route?.id 
+      },
+      order: { boardedAt: 'DESC' } as any,
+    };
+
+    const paginated = await QueryParser.findAndPaginate(this.boardingLogRepo, query, additionalOptions);
+
+    // Calculate total collected for ALL logs matching the criteria (ignoring page/limit)
+    // but applying the same filters as the paginated query
+    const totalCollectedResults = await this.boardingLogRepo.find({
+      select: ['amount'],
+      where: {
+        ...(additionalOptions.where as any || {}),
+        ...(QueryParser.parse(query).where as any || {}),
+      }
     });
 
-    const totalCollectedCents = logs.reduce((sum, l) => sum + Number(l.amount || 0), 0);
-    return { logs, totalCollectedCents, busQr } as any;
+    const totalCollectedCents = totalCollectedResults.reduce((sum, l) => sum + Number(l.amount || 0), 0);
+    
+    return {
+      ...paginated,
+      totalCollectedCents,
+      busQr,
+    };
   }
 }

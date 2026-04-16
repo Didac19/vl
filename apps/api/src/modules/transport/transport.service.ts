@@ -7,12 +7,15 @@ import {
   CreateTransportTypeDto,
   UpdateTransportTypeDto,
   CreateRouteDto,
-  UpdateRouteDto
+  UpdateRouteDto,
+  PaginatedResponseDto
 } from '@transix/shared-types';
 import { TransportType } from './entities/transport-type.entity';
 import { Route } from './entities/route.entity';
 import { Stop } from './entities/stop.entity';
 import { PointToPointFare } from './entities/point-to-point-fare.entity';
+import { ListQueryDto } from '../../common/dto/list-query.dto';
+import { QueryParser } from '../../common/utils/query-parser.util';
 
 @Injectable()
 export class TransportService {
@@ -62,8 +65,8 @@ export class TransportService {
     }));
   }
 
-  async getTransportTypes(): Promise<TransportType[]> {
-    return this.transportTypeRepo.find({ order: { name: 'ASC' } });
+  async getTransportTypes(query: ListQueryDto = { page: 1, limit: 10, filters: {}, sort: {} }): Promise<PaginatedResponseDto<TransportType>> {
+    return QueryParser.findAndPaginate(this.transportTypeRepo, query);
   }
 
   async createTransportType(dto: CreateTransportTypeDto): Promise<TransportType> {

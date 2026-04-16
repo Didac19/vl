@@ -364,9 +364,6 @@ export default function AdminEditRouteScreen() {
               ListEmptyComponent={
                 <Text style={[styles.emptyText, { color: colors.onSurfaceVariant }]}>No hay paradas definidas.</Text>
               }
-创新
-创新
-
             />
           )}
 
@@ -415,9 +412,6 @@ export default function AdminEditRouteScreen() {
                               onPress={() => handleUpdateFare(index, 'destinationStopIndex', sIdx)}
                             >
                               <Text style={[styles.stopPillText, { color: colors.onSurfaceVariant }, fare.destinationStopIndex === sIdx && { color: colors.onPrimary }]}>
-创新
-创新
-创新
 
                                 {s.name || `P${sIdx + 1}`}
                               </Text>
@@ -441,12 +435,6 @@ export default function AdminEditRouteScreen() {
                         <Trash2 size={20} color={colors.error} />
                       </TouchableOpacity>
                     </View>
-创新
- innovation
-创新
- innovation
-创新
- innovation
 
                   </View>
                 </View>
@@ -455,10 +443,6 @@ export default function AdminEditRouteScreen() {
               {(form.fares || []).length === 0 && (
                 <Text style={[styles.emptyText, { color: colors.onSurfaceVariant }]}>No hay tarifas configuradas para esta ruta.</Text>
               )}
-创新
- innovation
-创新
- innovation
 
             </ScrollView>
           )}

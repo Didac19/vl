@@ -13,8 +13,16 @@ import Colors from '@/constants/Colors';
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const user = useAuthStore((state) => state.user);
+  const { user } = useAuthStore();
   const userName = user?.fullName?.split(' ')[0] || "Usuario";
+
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'COMPANY_ADMIN';
+
+  React.useEffect(() => {
+    if (isAdmin) {
+      router.replace('/(tabs)/admin');
+    }
+  }, [isAdmin]);
 
   const { data: wallet, isLoading: walletLoading } = useMyWallet();
   const walletBalance = wallet?.balance != null ? wallet.balance / 100 : null;
@@ -23,6 +31,14 @@ export default function DashboardScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme];
   const styles = makeStyles(colors);
+
+  if (isAdmin) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>

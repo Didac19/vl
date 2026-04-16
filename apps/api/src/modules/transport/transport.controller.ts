@@ -6,6 +6,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { GetUser } from '../auth/decorators/get-user.decorator';
+import { ListQuery } from '../../common/decorators/list-query.decorator';
+import { ListQueryDto } from '../../common/dto/list-query.dto';
 
 @ApiTags('transport')
 @Controller('transport')
@@ -20,9 +22,9 @@ export class TransportController {
   }
 
   @Get('types')
-  @ApiOperation({ summary: 'Obtener solo tipos de transporte' })
-  getTypes() {
-    return this.transportService.getTransportTypes();
+  @ApiOperation({ summary: 'Obtener solo tipos de transporte (Filtros dinámicos)' })
+  getTypes(@ListQuery() query: ListQueryDto) {
+    return this.transportService.getTransportTypes(query);
   }
 
   @Get('routes/:id/fares')
