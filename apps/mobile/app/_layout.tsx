@@ -68,6 +68,7 @@ export default function RootLayout() {
               <Stack.Screen name="admin/edit-transport-type" options={{ headerShown: false }} />
               <Stack.Screen name="validator/scan" options={{ headerShown: false }} />
               <Stack.Screen name="scan" options={{ headerShown: false, presentation: 'fullScreenModal' }} />
+              <Stack.Screen name="top-up" options={{ headerShown: false }} />
               <Stack.Screen name="+not-found" />
             </Stack>
             <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />

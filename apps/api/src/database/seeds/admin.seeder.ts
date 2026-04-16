@@ -15,11 +15,9 @@ export default class AdminSeeder implements Seeder {
     const email = process.env.ADMIN_EMAIL || 'admin@vialibre.com';
     const password = process.env.ADMIN_PASSWORD || 'Admin123!';
 
-    const existingAdmin = await repository.findOneBy({ email });
-
+    const existingAdmin = await repository.findOne({ where: { email }, relations: ['wallet'] });
     if (!existingAdmin) {
       const hashedPassword = await bcrypt.hash(password, 10);
-
       const admin = repository.create({
         fullName: 'TranSix Admin',
         email,
@@ -28,7 +26,6 @@ export default class AdminSeeder implements Seeder {
         role: UserRole.ADMIN,
       });
 
-      // Every user must have a wallet
       const wallet = new Wallet();
       wallet.balance = 0;
       wallet.currency = 'COP';
@@ -36,8 +33,15 @@ export default class AdminSeeder implements Seeder {
 
       await repository.save(admin);
       console.log('✅ Admin user seeded.');
+    } else if (!existingAdmin.wallet) {
+      console.log('ℹ️ Adding missing wallet to existing Admin...');
+      const wallet = new Wallet();
+      wallet.balance = 0;
+      wallet.currency = 'COP';
+      existingAdmin.wallet = wallet;
+      await repository.save(existingAdmin);
     } else {
-      console.log('ℹ️ Admin user already exists.');
+      console.log('ℹ️ Admin user already exists with wallet.');
     }
   }
 }

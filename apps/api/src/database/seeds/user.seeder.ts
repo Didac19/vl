@@ -4,6 +4,7 @@ import { User } from '../../modules/users/entities/user.entity';
 import { Company } from '../../modules/companies/entities/company.entity';
 import { UserRole } from '@transix/shared-types';
 import * as bcrypt from 'bcryptjs';
+import { Wallet } from '@/modules/wallet/entities/wallet.entity';
 
 export default class UserSeeder implements Seeder {
   public async run(
@@ -16,7 +17,7 @@ export default class UserSeeder implements Seeder {
     // Create a known admin user
     // ... (existing admin logic)
     const adminEmail = 'admin@vialibre.com';
-    let admin = await userRepo.findOneBy({ email: adminEmail });
+    let admin = await userRepo.findOne({ where: { email: adminEmail }, relations: ['wallet'] });
     if (!admin) {
       console.log('🌱 Creating admin user...');
       const hashedPassword = await bcrypt.hash('admin123', 10);
@@ -27,6 +28,11 @@ export default class UserSeeder implements Seeder {
         phone: '3000000000',
         role: UserRole.ADMIN,
       });
+    }
+    if (!admin.wallet) {
+      admin.wallet = new Wallet();
+      admin.wallet.balance = 0;
+      admin.wallet.currency = 'COP';
       await userRepo.save(admin);
     }
 
@@ -36,7 +42,7 @@ export default class UserSeeder implements Seeder {
     if (cableAereo) {
       // Create a Company Admin
       const coAdminEmail = 'manager@cableaereo.com';
-      let coAdmin = await userRepo.findOneBy({ email: coAdminEmail });
+      let coAdmin = await userRepo.findOne({ where: { email: coAdminEmail }, relations: ['wallet'] });
       if (!coAdmin) {
         console.log('🌱 Creating Company Admin for Cable Aéreo...');
         coAdmin = userRepo.create({
@@ -46,12 +52,20 @@ export default class UserSeeder implements Seeder {
           role: UserRole.COMPANY_ADMIN,
           company: cableAereo,
         });
+      }
+      if (!coAdmin.wallet || !coAdmin.company) {
+        if (!coAdmin.wallet) {
+          coAdmin.wallet = new Wallet();
+          coAdmin.wallet.balance = 0;
+          coAdmin.wallet.currency = 'COP';
+        }
+        coAdmin.company = cableAereo;
         await userRepo.save(coAdmin);
       }
 
       // Create a Driver
       const driverEmail = 'conductor@cableaereo.com';
-      let driver = await userRepo.findOneBy({ email: driverEmail });
+      let driver = await userRepo.findOne({ where: { email: driverEmail }, relations: ['wallet'] });
       if (!driver) {
         console.log('🌱 Creating Driver for Cable Aéreo...');
         driver = userRepo.create({
@@ -61,13 +75,21 @@ export default class UserSeeder implements Seeder {
           role: UserRole.VALIDATOR,
           company: cableAereo,
         });
+      }
+      if (!driver.wallet || !driver.company) {
+        if (!driver.wallet) {
+          driver.wallet = new Wallet();
+          driver.wallet.balance = 0;
+          driver.wallet.currency = 'COP';
+        }
+        driver.company = cableAereo;
         await userRepo.save(driver);
       }
     }
 
     // Create a normal test user
     const userEmail = 'user@vialibre.com';
-    let normalUser = await userRepo.findOneBy({ email: userEmail });
+    let normalUser = await userRepo.findOne({ where: { email: userEmail }, relations: ['wallet'] });
     if (!normalUser) {
       console.log('🌱 Creating normal test user...');
       const hashedPassword = await bcrypt.hash('user123', 10);
@@ -78,6 +100,11 @@ export default class UserSeeder implements Seeder {
         phone: '3110000000',
         role: UserRole.USER,
       });
+    }
+    if (!normalUser.wallet) {
+      normalUser.wallet = new Wallet();
+      normalUser.wallet.balance = 0;
+      normalUser.wallet.currency = 'COP';
       await userRepo.save(normalUser);
     }
 
