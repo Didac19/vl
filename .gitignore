@@ -11,3 +11,5 @@ ios
 coverage
 .turbo
 *.pem
+.agents/
+skills-lock.json

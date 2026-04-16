@@ -21,9 +21,9 @@ export class Stop {
   @ManyToOne(() => Route, (route) => route.stops, { onDelete: 'CASCADE' })
   route: Route;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 }

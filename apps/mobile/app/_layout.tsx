@@ -35,6 +35,7 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
 
       if (!user) {
+        queryClient.clear(); // Clear all queries on logout
         router.replace('/(auth)/login');
       } else if (user.role === UserRole.VALIDATOR) {
         router.replace('/validator/scan');
@@ -56,7 +57,7 @@ export default function RootLayout() {
             <Stack>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="(auth)/login" options={{ headerShown: false, animation: 'fade' }} />
-              <Stack.Screen name="(auth)/register" options={{ title: 'Registro', headerBackTitle: 'Login' }} />
+              <Stack.Screen name="(auth)/register" options={{ headerShown: false }} />
               <Stack.Screen name="select-transport" options={{ headerShown: false }} />
               <Stack.Screen name="purchase-ticket" options={{ headerShown: false }} />
               <Stack.Screen name="ticket-detail" options={{ headerShown: false, presentation: 'modal' }} />
@@ -66,9 +67,13 @@ export default function RootLayout() {
               <Stack.Screen name="admin/routes" options={{ headerShown: false }} />
               <Stack.Screen name="admin/edit-route" options={{ headerShown: false }} />
               <Stack.Screen name="admin/edit-transport-type" options={{ headerShown: false }} />
+              <Stack.Screen name="admin/generate-qr" options={{ headerShown: false }} />
+              <Stack.Screen name="admin/qr-payments" options={{ headerShown: false }} />
+              <Stack.Screen name="admin/select-qr-recaudos" options={{ headerShown: false }} />
               <Stack.Screen name="validator/scan" options={{ headerShown: false }} />
               <Stack.Screen name="scan" options={{ headerShown: false, presentation: 'fullScreenModal' }} />
               <Stack.Screen name="top-up" options={{ headerShown: false }} />
+              <Stack.Screen name="modal" options={{ headerShown: false, presentation: 'modal' }} />
               <Stack.Screen name="+not-found" />
             </Stack>
             <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />

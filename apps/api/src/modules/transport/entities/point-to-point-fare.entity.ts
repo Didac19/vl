@@ -19,9 +19,9 @@ export class PointToPointFare {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   fareAmount: number;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 }

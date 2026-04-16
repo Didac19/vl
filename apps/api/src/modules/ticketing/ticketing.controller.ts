@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Body,
+  Param,
   UseGuards,
   Request,
   HttpCode,
@@ -38,12 +39,30 @@ class ConfirmBoardingDto {
   amount?: number;
 }
 
+class GenerateBusQrDto {
+  @IsString() busId: string;
+  @IsNumber() amount: number;
+  @IsString() @IsOptional() routeId?: string;
+  @IsOptional() newRoute?: {
+    name: string;
+    transportTypeId: string;
+    baseFare: number;
+  };
+}
+
+class PayBusQrDto {
+  @IsString() token: string;
+  @IsNumber() quantity: number;
+}
+
 @ApiTags('tickets')
 @ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard)
 @Controller('tickets')
 export class TicketingController {
-  constructor(private readonly ticketingService: TicketingService) {}
+  constructor(private readonly ticketingService: TicketingService) {
+    console.log('✅ TicketingController initialized');
+  }
 
   @Get('routes')
   @ApiOperation({ summary: 'Listar rutas disponibles (mock)' })
@@ -98,8 +117,50 @@ export class TicketingController {
     return this.ticketingService.confirmBoarding(
       req.user.id,
       dto.routeId,
-      dto.tripId,
+      undefined,
       dto.amount,
     );
+  }
+
+  @Post('generate-bus-qr')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.COMPANY_ADMIN)
+  @ApiOperation({ summary: 'Generar múltiples códigos QR para buses (Solo Admin/Company Admin)' })
+  generateBusQr(@Request() req: any, @Body() dto: GenerateBusQrDto) {
+    return this.ticketingService.generateBusQr(req.user, dto);
+  }
+
+  @Post('pay-bus-qr')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Pagar pasaje escaneando código QR de bus' })
+  payBusQr(@Request() req: any, @Body() dto: PayBusQrDto) {
+    return this.ticketingService.payBusQr(req.user.id, dto);
+  }
+
+  @Get('company-bus-qrs')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.COMPANY_ADMIN)
+  @ApiOperation({ summary: 'Listar QRs de bus generados por la empresa del admin' })
+  async getCompanyBusQrs(@Request() req: any) {
+    const user = await this.ticketingService['userRepo'].findOne({
+      where: { id: req.user.id },
+      relations: ['company'],
+    });
+    if (!user?.company) return [];
+    return this.ticketingService.getCompanyBusQrs(user.company.id);
+  }
+
+  @Get('bus-qr/:id/payments')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.COMPANY_ADMIN)
+  @ApiOperation({ summary: 'Ver pagos/recaudación de un QR de bus específico' })
+  async getQrPayments(@Param('id') id: string, @Request() req: any) {
+    const user = await this.ticketingService['userRepo'].findOne({
+      where: { id: req.user.id },
+      relations: ['company'],
+    });
+    if (!user?.company) return { logs: [], totalCollectedCents: 0 };
+    return this.ticketingService.getQrPayments(id, user.company.id);
   }
 }

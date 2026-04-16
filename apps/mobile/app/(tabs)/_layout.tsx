@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Home, Ticket, User, Map as MapIcon } from 'lucide-react-native';
+import { Home, Ticket, User, Map as MapIcon, Briefcase } from 'lucide-react-native';
 import { theme } from '../../constants/theme';
 
 import { useColorScheme } from '@/components/useColorScheme';
@@ -15,6 +15,10 @@ export default function TabLayout() {
   const colors = Colors[colorScheme];
   const { user } = useAuthStore();
   const router = useRouter();
+
+  const isAdmin = user?.role === UserRole.ADMIN;
+  const isCompanyAdmin = user?.role === UserRole.COMPANY_ADMIN;
+  const hasAdminAccess = isAdmin || isCompanyAdmin;
 
   useEffect(() => {
     if (user?.role === UserRole.VALIDATOR) {
@@ -69,6 +73,14 @@ export default function TabLayout() {
         options={{
           title: 'Perfil',
           tabBarIcon: ({ color, size }) => <User color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="admin"
+        options={{
+          title: 'Admin',
+          tabBarIcon: ({ color, size }) => <Briefcase color={color} size={size} />,
+          href: hasAdminAccess ? '/admin' : null,
         }}
       />
     </Tabs>

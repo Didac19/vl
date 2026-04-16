@@ -11,6 +11,8 @@ import { StatusBar } from 'expo-status-bar';
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { theme } from '@/constants/theme';
+import { usePayBusQr, useMyWallet } from './../lib/queries';
+import { Bus, User, ShoppingCart, Minus, Plus, Wallet as WalletIcon, ArrowRight } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -33,7 +35,13 @@ export default function ScanScreen() {
   const [isFlashOn, setIsFlashOn] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showBankOptions, setShowBankOptions] = useState(false);
+  const [showPurchaseOptions, setShowPurchaseOptions] = useState(false);
   const [scannedData, setScannedData] = useState<string | null>(null);
+  const [busData, setBusData] = useState<any | null>(null);
+  const [quantity, setQuantity] = useState(1);
+
+  const payBusQr = usePayBusQr();
+  const { data: wallet } = useMyWallet();
 
   useEffect(() => {
     if (!permission) {
@@ -96,7 +104,32 @@ export default function ScanScreen() {
         return;
       }
 
-      // If it's not a URL or an internal route, we assume it's a bank EMV QR payload.
+      // If it's not a URL or an internal route, we check if it's a Bus QR (JWT)
+      if (data.startsWith('eyJ')) {
+        try {
+          // Decode enough to show info
+          const base64Url = data.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          // Simple base64 decode for JSON in payload
+          // In React Native we can use a small polyfill or Buffer if we had it, 
+          // but for simple ASCII it's often fine to use a custom one.
+          // However, since we want to be safe, we'll assume it's valid if it matches the pattern 
+          // and let the backend handle verification, but we want to show info.
+          
+          // Let's use a very basic decode for the UI
+          const decoded = JSON.parse(decodeURIComponent(escape(window.atob(base64))));
+          if (decoded && decoded.busId) {
+            setBusData(decoded);
+            setScannedData(data);
+            setShowPurchaseOptions(true);
+            return;
+          }
+        } catch (e) {
+          // If decoding fails, fallback to bank options
+          console.log('Failed to decode as Bus QR, trying bank options');
+        }
+      }
+
       setScannedData(data);
       setShowBankOptions(true);
     } catch (e) {
@@ -104,6 +137,27 @@ export default function ScanScreen() {
       Alert.alert('Error', 'No se pudo procesar el código', [
         { text: 'OK', onPress: () => { setScanned(false); setIsProcessing(false); } }
       ]);
+    }
+  };
+
+  const handleConfirmPurchase = async () => {
+    if (!scannedData) return;
+    
+    setIsProcessing(true);
+    try {
+      await payBusQr.mutateAsync({
+        token: scannedData,
+        quantity: quantity,
+      });
+
+      Alert.alert('¡Pago Exitoso!', `Has pagado ${quantity} pasaje(s) para el bus ${busData?.busId || ''}`, [
+        { text: 'OK', onPress: () => router.back() }
+      ]);
+    } catch (error: any) {
+      Alert.alert('Error en el pago', error.response?.data?.message || 'No se pudo completar la transacción');
+      setIsProcessing(false);
+      setScanned(false);
+      setShowPurchaseOptions(false);
     }
   };
 
@@ -173,6 +227,120 @@ export default function ScanScreen() {
         >
           <Text style={styles.cancelButtonText}>Cancelar</Text>
         </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (showPurchaseOptions) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background, padding: 24, justifyContent: 'center' }]}>
+        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+        
+        <View style={[styles.purchaseCard, { backgroundColor: colors.surface }, theme.shadows[colorScheme].md]}>
+          <View style={styles.iconCircle}>
+            <Bus size={32} color={colors.primary} />
+          </View>
+          
+          <Text style={[styles.purchaseTitle, { color: colors.text }]}>Confirmar Pago</Text>
+          <Text style={[styles.busName, { color: colors.onSurfaceVariant }]}>
+            Bus: {busData?.busId}
+          </Text>
+          <Text style={[styles.routeName, { color: colors.text }]}>
+            {busData?.routeName}
+          </Text>
+          <Text style={[styles.companyName, { color: colors.onSurfaceVariant }]}>
+            {busData?.companyName}
+          </Text>
+
+          <View style={[styles.divider, { backgroundColor: colors.outlineVariant }]} />
+
+          <View style={styles.quantitySection}>
+            <Text style={[styles.label, { color: colors.text }]}>Cantidad de Pasajes</Text>
+            <View style={styles.quantityControls}>
+              <TouchableOpacity 
+                style={[styles.qtyBtn, { backgroundColor: colors.background }]} 
+                onPress={() => setQuantity(Math.max(1, quantity - 1))}
+              >
+                <Minus size={20} color={colors.text} />
+              </TouchableOpacity>
+              <Text style={[styles.qtyText, { color: colors.text }]}>{quantity}</Text>
+              <TouchableOpacity 
+                style={[styles.qtyBtn, { backgroundColor: colors.background }]} 
+                onPress={() => setQuantity(quantity + 1)}
+              >
+                <Plus size={20} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.totalSection}>
+            <Text style={[styles.totalLabel, { color: colors.onSurfaceVariant }]}>Total a pagar</Text>
+            <Text style={[styles.totalAmount, { color: colors.primary }]}>
+              ${((busData?.amount || 0) * quantity).toLocaleString()}
+            </Text>
+            <Text style={[styles.unitPrice, { color: colors.onSurfaceVariant }]}>
+              (${Number(busData?.amount).toLocaleString()} c/u)
+            </Text>
+          </View>
+
+          <View style={[styles.balancePreview, { backgroundColor: colors.background }]}>
+            <View style={styles.balanceRow}>
+              <View style={styles.balanceLabelGroup}>
+                <WalletIcon size={16} color={colors.onSurfaceVariant} />
+                <Text style={[styles.balanceLabel, { color: colors.onSurfaceVariant }]}>Tu saldo</Text>
+              </View>
+              <Text style={[styles.balanceValue, { color: colors.text }]}>
+                ${Number((wallet?.balance || 0) / 100).toLocaleString()}
+              </Text>
+            </View>
+            
+            <View style={[styles.balanceDivider, { backgroundColor: colors.outlineVariant }]} />
+            
+            <View style={styles.balanceRow}>
+              <View style={styles.balanceLabelGroup}>
+                <ArrowRight size={16} color={((wallet?.balance || 0) / 100 - (busData?.amount || 0) * quantity) < 0 ? colors.error : colors.primary} />
+                <Text style={[styles.balanceLabel, { color: colors.onSurfaceVariant }]}>Después del pago</Text>
+              </View>
+              <Text style={[
+                styles.balanceValue, 
+                { color: ((wallet?.balance || 0) / 100 - (busData?.amount || 0) * quantity) < 0 ? colors.error : colors.primary },
+                ((wallet?.balance || 0) / 100 - (busData?.amount || 0) * quantity) < 0 && styles.negativeBalance
+              ]}>
+                ${Math.max(0, (wallet?.balance || 0) / 100 - (busData?.amount || 0) * quantity).toLocaleString()}
+              </Text>
+            </View>
+
+            {((wallet?.balance || 0) / 100 - (busData?.amount || 0) * quantity) < 0 && (
+              <View style={styles.insufficientFundsRow}>
+                <Text style={[styles.insufficientFundsText, { color: colors.error }]}>Saldo insuficiente</Text>
+              </View>
+            )}
+          </View>
+
+          <TouchableOpacity 
+            style={[
+              styles.confirmButton, 
+              { backgroundColor: colors.primary },
+              ((wallet?.balance || 0) / 100 - (busData?.amount || 0) * quantity) < 0 && { opacity: 0.5 }
+            ]}
+            onPress={handleConfirmPurchase}
+            disabled={((wallet?.balance || 0) / 100 - (busData?.amount || 0) * quantity) < 0}
+          >
+            <ShoppingCart size={20} color={colors.onPrimary} />
+            <Text style={styles.confirmButtonText}>Confirmar y Pagar</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.cancelLink}
+            onPress={() => {
+              setShowPurchaseOptions(false);
+              setScanned(false);
+              setQuantity(1);
+            }}
+          >
+            <Text style={[styles.cancelLinkText, { color: colors.error }]}>Cancelar</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -379,5 +547,156 @@ const makeStyles = (colors: any) => StyleSheet.create({
     fontSize: 15,
     color: colors.onSurfaceVariant,
     textAlign: 'center',
+  },
+  purchaseCard: {
+    borderRadius: 32,
+    padding: 24,
+    alignItems: 'center',
+    width: '100%',
+  },
+  iconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: colors.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  purchaseTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  busName: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  routeName: {
+    fontSize: 18,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  companyName: {
+    fontSize: 13,
+    marginTop: 4,
+  },
+  divider: {
+    width: '100%',
+    height: 1,
+    marginVertical: 20,
+  },
+  quantitySection: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+  },
+  label: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  quantityControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  qtyBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  qtyText: {
+    fontSize: 18,
+    fontWeight: '800',
+    minWidth: 20,
+    textAlign: 'center',
+  },
+  totalSection: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  totalLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  totalAmount: {
+    fontSize: 36,
+    fontWeight: '900',
+  },
+  unitPrice: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  confirmButton: {
+    width: '100%',
+    height: 56,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  confirmButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  cancelLink: {
+    marginTop: 16,
+    padding: 8,
+  },
+  cancelLinkText: {
+    fontSize: 14,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
+  },
+  balancePreview: {
+    width: '100%',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+  },
+  balanceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  balanceLabelGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  balanceLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  balanceValue: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  balanceDivider: {
+    height: 1,
+    width: '100%',
+    marginVertical: 12,
+    opacity: 0.5,
+  },
+  negativeBalance: {
+    fontWeight: '800',
+  },
+  insufficientFundsRow: {
+    marginTop: 8,
+    alignItems: 'center',
+  },
+  insufficientFundsText: {
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 });

@@ -25,9 +25,9 @@ export class TransportType {
   @OneToMany(() => Route, (route) => route.transportType, { cascade: true })
   routes: Route[];
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 }

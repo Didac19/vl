@@ -30,6 +30,7 @@ export class WalletService {
     const wallet = await this.walletRepo.findOne({
       where: { user: { id: userId } },
       relations: ['transactions'],
+      order: { transactions: { createdAt: 'DESC' } },
     });
     if (!wallet) throw new NotFoundException('Billetera no encontrada');
     return wallet;

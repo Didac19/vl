@@ -198,6 +198,32 @@ export interface TicketDto {
   expiresAt: string;
 }
 
+export interface GenerateBusQrDto {
+  busId: string;
+  amount: number;
+  routeId?: string;
+  newRoute?: {
+    name: string;
+    transportTypeId: string;
+    baseFare: number;
+  };
+}
+
+export interface BusQrPayload {
+  busId: string;
+  companyId: string;
+  companyName: string;
+  routeId: string;
+  routeName: string;
+  amount: number;
+  signedAt: string;
+}
+
+export interface PayBusQrDto {
+  token: string;
+  quantity: number;
+}
+
 export interface PurchaseTicketDto {
   routeId: string;
   walletId: string;

@@ -1,7 +1,7 @@
 import React from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, Platform } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { QrCode, Clock, CheckCircle2, AlertCircle, ArrowUpRight, ArrowDownLeft, ChevronRight, Plus } from 'lucide-react-native';
+import { QrCode, ArrowUpRight, ArrowDownLeft, Plus } from 'lucide-react-native';
 import { theme } from '../../constants/theme';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -56,76 +56,44 @@ export default function WalletScreen() {
         </View>
       </View>
 
-      <FlatList
-        data={activeTickets}
-        keyExtractor={(item) => item.id}
-        ListHeaderComponent={() => (
-          <View style={styles.section}>
-            <Text style={styles.subtitle}>Tiquetes Activos</Text>
-            {activeTickets.length === 0 && (
-              <View style={styles.emptyState}>
-                <QrCode size={48} color={colors.outline} />
-                <Text style={styles.emptyText}>No tienes pasajes activos</Text>
-              </View>
-            )}
-          </View>
-        )}
-        renderItem={({ item }) => (
-          <TouchableOpacity style={styles.ticketCard}>
-            <View style={[styles.ticketBadge, { backgroundColor: item.color }]}>
-              <QrCode size={20} color="white" />
-            </View>
-            <View style={styles.ticketInfo}>
-              <Text style={styles.ticketRoute}>{item.route}</Text>
-              <View style={styles.ticketMeta}>
-                <Clock size={12} color={colors.onSurfaceVariant} />
-                <Text style={styles.ticketExpires}>Expira en {item.expires}</Text>
-              </View>
-            </View>
-            <ChevronRight size={20} color={colors.outline} />
-          </TouchableOpacity>
-        )}
-        ListFooterComponent={() => (
-          <View style={styles.section}>
-            <View style={[styles.sectionHeader, { marginTop: 20 }]}>
-              <Text style={styles.subtitle}>Actividad Reciente</Text>
-              <TouchableOpacity><Text style={styles.viewMore}>Filtrar</Text></TouchableOpacity>
-            </View>
-            {recentTx.length === 0 && (
+      <ScrollView contentContainerStyle={{ padding: theme.spacing[4] }}>
+        <View style={styles.section}>
+          <Text style={styles.subtitle}>Actividad Reciente</Text>
+          {recentTx.length === 0 ? (
+            <View style={styles.emptyState}>
+              <QrCode size={48} color={colors.outline} />
               <Text style={styles.emptyText}>No hay actividad reciente</Text>
-            )}
-            {recentTx.map((tx: any, i: number) => {
+            </View>
+          ) : (
+            recentTx.map((tx: any, i: number) => {
               const amount = tx.amount ? (tx.type === 'CREDIT' ? tx.amount / 100 : -tx.amount / 100) : tx.amount;
               return (
-              <View key={tx.id || i} style={styles.txRow}>
-                <View style={[styles.txIcon, { backgroundColor: amount > 0 ? colors.success + '20' : colors.error + '20' }]}>
-                  {amount > 0 ? (
-                    <ArrowDownLeft size={16} color={colors.success} />
-                  ) : (
-                    <ArrowUpRight size={16} color={colors.error} />
-                  )}
+                <View key={tx.id || i} style={styles.txRow}>
+                  <View style={[styles.txIcon, { backgroundColor: amount > 0 ? colors.success + '20' : colors.error + '20' }]}>
+                    {amount > 0 ? (
+                      <ArrowDownLeft size={16} color={colors.success} />
+                    ) : (
+                      <ArrowUpRight size={16} color={colors.error} />
+                    )}
+                  </View>
+                  <View style={styles.txInfo}>
+                    <Text style={styles.txDesc}>{tx.description}</Text>
+                    <Text style={styles.txDate}>{tx.createdAt ? new Date(tx.createdAt).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : tx.date}</Text>
+                  </View>
+                  <Text style={[styles.txAmount, { color: amount > 0 ? colors.success : colors.text }]}>
+                    {amount > 0 ? `+$${amount.toLocaleString(undefined)}` : `-$${Math.abs(amount).toLocaleString(undefined)}`}
+                  </Text>
                 </View>
-                <View style={styles.txInfo}>
-                  <Text style={styles.txDesc}>{tx.description}</Text>
-                  <Text style={styles.txDate}>{tx.createdAt ? new Date(tx.createdAt).toLocaleString() : tx.date}</Text>
-                </View>
-                <Text style={[styles.txAmount, { color: amount > 0 ? colors.success : colors.text }]}>
-                  {amount > 0 ? `+$${amount.toLocaleString()}` : `-$${Math.abs(amount).toLocaleString()}`}
-                </Text>
-              </View>
-            )})}
-          </View>
-        )}
-        contentContainerStyle={{ padding: theme.spacing[4] }}
-      />
+              );
+            })
+          )}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
-const activeTickets = [
-  { id: '1', route: 'TransMilenio - B01 Portal Norte', expires: '2h 15min', color: theme.colors.transport.transmilenio },
-  { id: '2', route: 'SITP - 302 Usaquén', expires: '45min', color: theme.colors.transport.sitp },
-];
+// Active tickets section removed — not in use
 
 const transactions = [
   { description: 'Pasaje TransMilenio B01', date: 'Hoy, 08:32 AM', amount: -2950 },

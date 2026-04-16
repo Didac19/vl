@@ -1,7 +1,7 @@
 import React from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Image, ImageBackground } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Image, ImageBackground, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Menu, Search, ArrowRight, Home, Briefcase, Plus, Map as MapIcon, Bus, Train, LocateFixed, Navigation, QrCode } from 'lucide-react-native';
+import { Menu, Search, ArrowRight, ArrowUpRight, ArrowDownLeft, Home, Briefcase, Plus, Map as MapIcon, Bus, Train, LocateFixed, Navigation, QrCode } from 'lucide-react-native';
 import { theme } from '../../constants/theme';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -16,8 +16,9 @@ export default function DashboardScreen() {
   const user = useAuthStore((state) => state.user);
   const userName = user?.fullName?.split(' ')[0] || "Usuario";
 
-  const { data: wallet } = useMyWallet();
+  const { data: wallet, isLoading: walletLoading } = useMyWallet();
   const walletBalance = wallet?.balance != null ? wallet.balance / 100 : null;
+  const recentTx: any[] = wallet?.transactions?.slice(0, 5) || [];
   
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme];
@@ -55,7 +56,8 @@ export default function DashboardScreen() {
           <Text style={styles.welcomeSubtitle}>Gestione su movilidad activa</Text>
         </View>
 
-        {/* Active Ticket Section (NEW) */}
+        {/* Active Ticket Section — commented out until feature is ready */}
+        {/*
         <View style={styles.activeTicketContainer}>
           <TouchableOpacity
             activeOpacity={0.9}
@@ -65,10 +67,8 @@ export default function DashboardScreen() {
             })}
             style={[styles.activeTicketCard, { backgroundColor: colors.primary }]}
           >
-            {/* Decorative shapes */}
             <View style={styles.shapeTop} />
             <View style={styles.shapeBottom} />
-
             <View style={styles.activeTicketContent}>
               <View style={styles.activeTicketHeader}>
                 <View>
@@ -79,19 +79,12 @@ export default function DashboardScreen() {
                 </View>
                 <Text style={styles.expiryText}>Vence en 45m</Text>
               </View>
-
-              {/* QR Code Area */}
               <View style={styles.qrContainer}>
                 <View style={styles.qrWrapper}>
-                  <Image
-                    source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCOykCGLg5T_umC1bunDeEkIvu7me9EhNqexqzo6QpmJLKfGr9jKb8C7OwwuRBwamMhykdHReDjOa-fICs8SL3nfZ64bVZmc27HzMYxPlIPlxM5zYGHeXVIPw4uDcCqNe3h6vO-pb2aETAmk4Tsl3BmWlsHDd2RsMXrFmE81lKbMD5bLh0rx1UUprbZI0G6ZgD1MKPdFpuX56M6z0g6LRrst_vhj71U4ZK42lseVXZmKAm63sgJ0VLE50PWJ3S5o26wKE6uH3jIAE9x' }}
-                    style={styles.qrImage}
-                  />
+                  <Image source={{ uri: '' }} style={styles.qrImage} />
                   <View style={styles.qrInnerBorder} />
                 </View>
               </View>
-
-              {/* Route Path */}
               <View style={styles.routePath}>
                 <View>
                   <Text style={styles.pathLabel}>ORIGEN</Text>
@@ -106,6 +99,7 @@ export default function DashboardScreen() {
             </View>
           </TouchableOpacity>
         </View>
+        */}
 
         {/* Search Bar */}
         <View style={styles.searchContainer}>
@@ -173,51 +167,58 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* Recent Pasajes (NEW) */}
+        {/* Recent Pasajes */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Pasajes Recientes</Text>
-          <TouchableOpacity>
-            <Text style={[styles.viewMapText, { color: colors.secondary }]}>Ver todo</Text>
+          <Text style={styles.sectionTitle}>Actividad Reciente</Text>
+          <TouchableOpacity onPress={() => router.push('/(tabs)/wallet')}>
+            <Text style={[styles.viewMapText, { color: colors.primary }]}>Ver todo</Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.recentList}>
-          {/* Recent Item 1 */}
-          <View style={styles.recentItem}>
-            <View style={styles.recentLeft}>
-              <View style={[styles.recentIconBox, { backgroundColor: colors.primaryContainer }]}>
-                <Train size={24} color={colors.onPrimaryContainer} />
-              </View>
-              <View>
-                <Text style={styles.recentTitle}>Cable Aéreo - Fundadores</Text>
-                <Text style={styles.recentDate}>Hoy, 10:45 AM</Text>
-              </View>
+        <View style={[styles.recentList, { backgroundColor: colors.surfaceContainerLow, borderRadius: 24, overflow: 'hidden', paddingHorizontal: 16 }]}>
+          {walletLoading ? (
+            <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: 24 }} />
+          ) : recentTx.length > 0 ? (
+            recentTx.map((tx: any, i: number) => {
+              const amount = tx.amount ? (tx.type === 'CREDIT' ? tx.amount / 100 : -tx.amount / 100) : 0;
+              const isLast = i === recentTx.length - 1;
+              return (
+                <View
+                  key={tx.id || i}
+                  style={[
+                    styles.txRow,
+                    !isLast && { borderBottomWidth: 1, borderBottomColor: colors.outlineVariant },
+                  ]}
+                >
+                  <View style={[styles.txIcon, { backgroundColor: amount > 0 ? colors.success + '20' : colors.error + '20' }]}>
+                    {amount > 0 ? (
+                      <ArrowDownLeft size={16} color={colors.success} />
+                    ) : (
+                      <ArrowUpRight size={16} color={colors.error} />
+                    )}
+                  </View>
+                  <View style={styles.txInfo}>
+                    <Text style={[styles.txDesc, { color: colors.onSurface }]} numberOfLines={1}>{tx.description}</Text>
+                    <Text style={[styles.txDate, { color: colors.onSurfaceVariant }]}>
+                      {tx.createdAt ? new Date(tx.createdAt).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}
+                    </Text>
+                  </View>
+                  <Text style={[styles.txAmount, { color: amount > 0 ? colors.success : colors.onSurface }]}>
+                    {amount > 0 ? `+$${amount.toLocaleString(undefined)}` : `-$${Math.abs(amount).toLocaleString(undefined)}`}
+                  </Text>
+                </View>
+              );
+            })
+          ) : (
+            <View style={styles.emptyState}>
+              <QrCode size={40} color={colors.outline} style={{ marginBottom: 12 }} />
+              <Text style={[styles.emptyStateText, { color: colors.onSurfaceVariant }]}>
+                Sin actividad reciente
+              </Text>
+              <Text style={[styles.emptyStateSubtext, { color: colors.outline }]}>
+                Escanea un QR de bus para pagar tu pasaje
+              </Text>
             </View>
-            <View style={styles.recentRight}>
-              <Text style={styles.recentAmount}>$2.500</Text>
-              <View style={styles.statusBadge}>
-                <Text style={styles.statusBadgeText}>Completado</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Recent Item 2 */}
-          <View style={styles.recentItem}>
-            <View style={styles.recentLeft}>
-              <View style={[styles.recentIconBox, { backgroundColor: colors.tertiaryFixed }]}>
-                <Bus size={24} color={colors.onTertiaryFixedVariant} />
-              </View>
-              <View>
-                <Text style={styles.recentTitle}>Bus Urbano - Ruta 2</Text>
-                <Text style={styles.recentDate}>Ayer, 06:20 PM</Text>
-              </View>
-            </View>
-            <View style={styles.recentRight}>
-              <Text style={styles.recentAmount}>$2.500</Text>
-              <View style={styles.statusBadge}>
-                <Text style={styles.statusBadgeText}>Completado</Text>
-              </View>
-            </View>
-          </View>
+          )}
         </View>
 
         {/* Nearby Stations Section */}
@@ -690,6 +691,48 @@ const makeStyles = (colors: any) => StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
     color: colors.primary,
+  },
+  txRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+  },
+  txIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  txInfo: {
+    flex: 1,
+  },
+  txDesc: {
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  txDate: {
+    fontSize: 12,
+  },
+  txAmount: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  emptyStateSubtext: {
+    fontSize: 13,
+    fontWeight: '500',
+    textAlign: 'center',
   },
   stationsList: {
     gap: 16,

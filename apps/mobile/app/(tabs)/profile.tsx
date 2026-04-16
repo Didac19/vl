@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Switch, ScrollView, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { User, Bell, Shield, CreditCard, LogOut, ChevronRight, Settings, HelpCircle, Map, LayoutGrid, Sun, Moon, Laptop } from 'lucide-react-native';
+import { User, Bell, Shield, CreditCard, LogOut, ChevronRight, Settings, HelpCircle, Map, Sun, Moon, Laptop } from 'lucide-react-native';
 import { theme } from '../../constants/theme';
 import { useAuthStore } from '../../store/auth';
 import { useThemeStore, ThemeMode } from '../../store/theme';
@@ -91,19 +91,7 @@ export default function ProfileScreen() {
           </>
         )}
 
-        {hasAdminAccess && (
-          <>
-            <Text style={[styles.sectionTitle, { color: colors.onSurfaceVariant }]}>Panel de Administración</Text>
-            <View style={[styles.menu, { backgroundColor: colors.surface }]}>
-              <MenuRow
-                icon={<LayoutGrid size={20} color={colors.primary} />}
-                label={isAdmin ? "Gestionar Transporte (Global)" : "Gestionar Mis Rutas"}
-                onPress={() => router.push('/admin/transport-types')}
-                colors={colors}
-              />
-            </View>
-          </>
-        )}
+
 
         <Text style={[styles.sectionTitle, { color: colors.onSurfaceVariant }]}>Cuenta y Seguridad</Text>
         <View style={[styles.menu, { backgroundColor: colors.surface }]}>

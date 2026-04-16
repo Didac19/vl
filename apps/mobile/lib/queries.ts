@@ -180,3 +180,73 @@ export const useTopUpWallet = () => {
     },
   });
 };
+
+// ==== TICKETING HOOKS ====
+
+export const ticketKeys = {
+  all: ['tickets'] as const,
+  mine: () => [...ticketKeys.all, 'mine'] as const,
+};
+
+export const useMyTickets = () => {
+  return useQuery({
+    queryKey: ticketKeys.mine(),
+    queryFn: async () => {
+      const response = await api.get('/tickets/my-tickets');
+      return response.data as any[];
+    },
+  });
+};
+
+export const busQrKeys = {
+  all: ['bus-qrs'] as const,
+  company: () => [...busQrKeys.all, 'company'] as const,
+  payments: (id: string) => [...busQrKeys.all, id, 'payments'] as const,
+};
+
+export const useGenerateBusQr = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: any) => {
+      const response = await api.post('/tickets/generate-bus-qr', payload);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: busQrKeys.company() });
+    },
+  });
+};
+
+export const useCompanyBusQrs = () => {
+  return useQuery({
+    queryKey: busQrKeys.company(),
+    queryFn: async () => {
+      const response = await api.get('/tickets/company-bus-qrs');
+      return response.data as any[];
+    },
+  });
+};
+
+export const useQrPayments = (busQrId: string) => {
+  return useQuery({
+    queryKey: busQrKeys.payments(busQrId),
+    queryFn: async () => {
+      const response = await api.get(`/tickets/bus-qr/${busQrId}/payments`);
+      return response.data as { logs: any[]; totalCollectedCents: number; busQr: any };
+    },
+    enabled: !!busQrId,
+  });
+};
+
+export const usePayBusQr = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: { token: string; quantity: number }) => {
+      const response = await api.post('/tickets/pay-bus-qr', payload);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: walletKeys.mine() });
+    },
+  });
+};

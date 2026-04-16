@@ -5,9 +5,12 @@ import { ConfigService } from '@nestjs/config';
 import { SignJWT, jwtVerify, importJWK } from 'jose';
 import { Ticket, TransportType } from './entities/ticket.entity';
 import { BoardingLog } from './entities/boarding-log.entity';
+import { BusQr } from './entities/bus-qr.entity';
 import { Route } from '../transport/entities/route.entity';
 import { User } from '../users/entities/user.entity';
 import { WalletService } from '../wallet/wallet.service';
+import { TransportService } from '../transport/transport.service';
+import * as Shared from '@transix/shared-types';
 
 // Mock route data — replace with TransportModule integration in Phase 3
 
@@ -17,8 +20,10 @@ export class TicketingService {
   constructor(
     @InjectRepository(Ticket) private readonly ticketRepo: Repository<Ticket>,
     @InjectRepository(BoardingLog) private readonly boardingLogRepo: Repository<BoardingLog>,
+    @InjectRepository(BusQr) private readonly busQrRepo: Repository<BusQr>,
     @InjectRepository(Route) private readonly routeRepo: Repository<Route>,
     @InjectRepository(User) private readonly userRepo: Repository<User>,
+    private readonly transportService: TransportService,
     private readonly walletService: WalletService,
     private readonly configService: ConfigService,
   ) {}
@@ -214,5 +219,152 @@ export class TicketingService {
       .setIssuedAt()
       .setExpirationTime(Math.floor(expiresAt.getTime() / 1000))
       .sign(secret);
+  }
+
+  async generateBusQr(user: any, dto: Shared.GenerateBusQrDto): Promise<{ token: string; payload: Shared.BusQrPayload; busQrId: string }> {
+    const fullUser = await this.userRepo.findOne({
+      where: { id: user.id },
+      relations: ['company'],
+    });
+
+    if (!fullUser || !fullUser.company) {
+      throw new BadRequestException('Usuario no asociado a una empresa de transporte');
+    }
+
+    const companyId = fullUser.company.id;
+    let routeId = dto.routeId;
+    let routeName = '';
+
+    if (dto.newRoute) {
+      const createdRoute = await this.transportService.createRoute({
+        name: dto.newRoute.name,
+        transportTypeId: dto.newRoute.transportTypeId,
+        baseFare: dto.newRoute.baseFare,
+        pricingStrategy: 'FLAT',
+      }, companyId);
+      routeId = createdRoute.id;
+      routeName = createdRoute.name;
+    } else if (routeId) {
+      const route = await this.routeRepo.findOne({
+        where: { id: routeId },
+        relations: ['company'],
+      });
+      if (!route) throw new NotFoundException('Ruta no encontrada');
+      if (route.company?.id !== companyId) throw new ForbiddenException('La ruta no pertenece a su empresa');
+      routeName = route.name;
+    } else {
+      throw new BadRequestException('Debe proporcionar una ruta existente o datos para una nueva');
+    }
+
+    const payload: Shared.BusQrPayload = {
+      busId: dto.busId,
+      companyId,
+      companyName: fullUser.company.name,
+      routeId,
+      routeName,
+      amount: dto.amount,
+      signedAt: new Date().toISOString(),
+    };
+
+    const secret = new TextEncoder().encode(
+      this.configService.get<string>('TICKET_SIGNING_SECRET', 'dev-secret-key-replace-in-prod'),
+    );
+
+    const token = await new SignJWT({ ...payload })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .sign(secret);
+
+    // Upsert: find existing record by busId + companyId, or create new one
+    let busQr = await this.busQrRepo.findOne({
+      where: { busId: dto.busId, company: { id: companyId } },
+    });
+
+    if (busQr) {
+      // Update existing record (regenerate)
+      busQr.token = token;
+      busQr.routeName = routeName;
+      busQr.amount = dto.amount;
+      busQr.route = { id: routeId } as any;
+    } else {
+      busQr = this.busQrRepo.create({
+        busId: dto.busId,
+        company: { id: companyId } as any,
+        route: { id: routeId } as any,
+        routeName,
+        amount: dto.amount,
+        token,
+      });
+    }
+
+    const saved = await this.busQrRepo.save(busQr);
+
+    return { token, payload, busQrId: saved.id };
+  }
+
+  async payBusQr(userId: string, dto: Shared.PayBusQrDto): Promise<{ success: boolean; totalAmount: number; quantity: number }> {
+    const secret = new TextEncoder().encode(
+      this.configService.get<string>('TICKET_SIGNING_SECRET', 'dev-secret-key-replace-in-prod'),
+    );
+
+    let payload: Shared.BusQrPayload;
+    try {
+      const { payload: verifiedPayload } = await jwtVerify(dto.token, secret);
+      payload = verifiedPayload as any;
+    } catch (e) {
+      throw new ForbiddenException('Código QR de bus no válido o alterado');
+    }
+
+    const totalAmount = payload.amount * dto.quantity;
+    const totalAmountCents = Math.round(totalAmount * 100); 
+
+    // Process payment
+
+    // Process payment
+    await this.walletService.debit(
+      userId,
+      totalAmountCents,
+      `Pago Bus ${payload.busId} - ${payload.routeName} (x${dto.quantity})`,
+      undefined,
+    );
+
+    // Log boarding
+    await this.boardingLogRepo.save(
+      this.boardingLogRepo.create({
+        routeId: payload.routeId,
+        amount: totalAmountCents,
+        tripId: payload.busId, // Using busId as tripId for simplicity
+        validator: { id: userId } as any, // In this case validator is the user paying? 
+        // Actually boarding log usually records the validator device. 
+        // but here it's a direct payment.
+      })
+    );
+
+    return {
+      success: true,
+      totalAmount: totalAmountCents,
+      quantity: dto.quantity,
+    };
+  }
+  async getCompanyBusQrs(companyId: string): Promise<BusQr[]> {
+    return this.busQrRepo.find({
+      where: { company: { id: companyId } },
+      order: { updatedAt: 'DESC' },
+    });
+  }
+
+  async getQrPayments(busQrId: string, companyId: string): Promise<{ logs: BoardingLog[]; totalCollectedCents: number }> {
+    const busQr = await this.busQrRepo.findOne({
+      where: { id: busQrId, company: { id: companyId } },
+    });
+    if (!busQr) throw new NotFoundException('QR no encontrado');
+
+    const logs = await this.boardingLogRepo.find({
+      where: { tripId: busQr.busId, routeId: busQr.route?.id },
+      order: { boardedAt: 'DESC' },
+    });
+
+    const totalCollectedCents = logs.reduce((sum, l) => sum + Number(l.amount || 0), 0);
+    return { logs, totalCollectedCents, busQr } as any;
   }
 }

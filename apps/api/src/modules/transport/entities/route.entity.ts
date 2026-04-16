@@ -36,9 +36,9 @@ export class Route {
   @OneToMany(() => PointToPointFare, (fare) => fare.route, { cascade: true })
   fareTable: PointToPointFare[];
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 }

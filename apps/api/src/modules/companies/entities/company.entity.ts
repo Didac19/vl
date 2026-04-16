@@ -32,10 +32,10 @@ export class Company {
   @OneToMany(() => Validator, (validator) => validator.company)
   validators: Validator[];
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 }
 

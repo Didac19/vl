@@ -19,6 +19,6 @@ export class ScannedTicket {
   @Column({ type: 'decimal', precision: 11, scale: 8, nullable: true })
   lng: number;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   scannedAt: Date;
 }
